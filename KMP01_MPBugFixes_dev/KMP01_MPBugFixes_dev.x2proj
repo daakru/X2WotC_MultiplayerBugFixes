@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Default" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Guid>aad9f2c8-d421-4980-82a1-61f7c84c3d96</Guid>
+    <Name>KMP01_MPBugFixes_dev</Name>
+    <Description>Developmental gameplay fixes for XCOM 2 WotC Multiplayer.
+
+tags=War of the Chosen, UI, Gameplay, Multiplayer, MP, bugfix, why firaxis why, through early morning fog I see...</Description>
+    <SteamPublishID>0</SteamPublishID>
+    <AssemblyName>KMP01_MPBugFixes_dev</AssemblyName>
+    <RootNamespace>KMP01_MPBugFixes_dev</RootNamespace>
+    <ProjectGuid>{ecb5c448-f9cc-4782-8681-2bac4d582259}</ProjectGuid>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="Config\" />
+    <Folder Include="Localization\" />
+    <Folder Include="Content" />
+    <Folder Include="Src\" />
+    <Folder Include="Src\KMP01_MPBugFixes_dev\" />
+    <Folder Include="Src\KMP01_MPBugFixes_dev\Classes\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Content\UILibrary_LW_OfficerPack.upk">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\KMP01_MPBugFixes_dev.int">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="ReadMe.txt" />
+    <Content Include="ModPreview.jpg" />
+    <Content Include="Config\XComEditor.ini" />
+    <Content Include="Config\XComEngine.ini" />
+    <Content Include="Config\XComGame.ini" />
+    <Content Include="Localization\XComGame.int" />
+    <Content Include="Src\KMP01_MPBugFixes_dev\Classes\UIMPShell_SquadCostPanel_RemotePlayer_KMP01.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\KMP01_MPBugFixes_dev\Classes\UIScreenListener_TacticalHUD_KMP01.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\KMP01_MPBugFixes_dev\Classes\UITacticalHUD_MouseControls_KMP01.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\KMP01_MPBugFixes_dev\Classes\X2DownloadableContentInfo_KMP01_MPBugFixes_dev.uc" />
+    <Content Include="Src\KMP01_MPBugFixes_dev\Classes\X2Helpers_Logger_KMP01.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\KMP01_MPBugFixes_dev\Classes\XComGameState_Ability_KMP01.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\KMP01_MPBugFixes_dev\Classes\XComGameState_Effect_KMP01.uc">
+      <SubType>Content</SubType>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildLocalExtensionPath)\XCOM2.targets" />
+</Project>
