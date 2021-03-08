@@ -44,22 +44,19 @@ static event OnPostTemplatesCreated()
 /// </summary>
 static function PatchSteadyHands()
 {
-    local X2AbilityTemplateManager          AbilityMgr;
-    local X2AbilityTemplate                 AbilityTemplate;
     local array<X2DataTemplate>             DifficultyVariants;
     local X2DataTemplate                    DifficultyVariant;
-    local int                               idxEffect;
-    local int                               idxStatBoost;
-    local X2Effect                          Effect;
-    local X2Effect                          StatEffect;
-    local X2Effect_Persistent               PersistentEffect;
     local X2Effect_PersistentStatChange     StatChangeEffect;
+    local X2Effect_Persistent               PersistentEffect;
+    local X2AbilityTemplate                 AbilityTemplate;
+    local X2AbilityTemplateManager          AbilityMgr;
+    local X2Effect                          Effect;
 
     AbilityMgr = class'X2AbilityTemplateManager'
-            .static.GetAbilityTemplateManager();
+        .static.GetAbilityTemplateManager();
 
-    AbilityMgr.FindDataTemplateAllDifficulties('SteadyHands',
-            DifficultyVariants);
+    AbilityMgr.FindDataTemplateAllDifficulties(
+        'SteadyHands', DifficultyVariants);
 
     foreach DifficultyVariants(DifficultyVariant)
     {
@@ -67,10 +64,13 @@ static function PatchSteadyHands()
 
         if (AbilityTemplate == none)
         {
+            kRed("ERROR: AbilityTemplate Not Found!", false);
+            kLog("Warning: Redscreen: ERROR: AbilityTemplate Not Found!",
+                true, default.bDeepLog);
             continue;
         }
 
-        foreach AbilityTemplate.AbilityShooterEffects(Effect, idxEffect)
+        foreach AbilityTemplate.AbilityShooterEffects(Effect)
         {
             PersistentEffect = X2Effect_Persistent(Effect);
             if (PersistentEffect.EffectName != 'SteadyHands')
@@ -78,21 +78,27 @@ static function PatchSteadyHands()
                 continue;
             }
 
-            foreach PersistentEffect.ApplyOnTick(StatEffect, idxStatBoost)
+            foreach PersistentEffect.ApplyOnTick(Effect)
             {
-                StatChangeEffect = X2Effect_PersistentStatChange(StatEffect);
+                StatChangeEffect = X2Effect_PersistentStatChange(Effect);
                 if (StatChangeEffect.EffectName != 'SteadyHandsStatBoost')
                 {
                     continue;
                 }
 
-                kLog("Original Duplicate Response:" @ X2Effect_PersistentStatChange(X2Effect_Persistent(AbilityTemplate.AbilityShooterEffects[idxEffect]).ApplyOnTick[idxStatBoost]).DuplicateResponse,
+                kLog("Original Duplicate Response:"
+                    @ StatChangeEffect.DuplicateResponse,
                     true, default.bDeepLog);
-                //X2Effect_PersistentStatChange(X2Effect_Persistent(AbilityTemplate.AbilityShooterEffects[idxEffect]).ApplyOnTick[idxStatBoost]).DuplicateResponse = eDupe_Ignore;
                 StatChangeEffect.DuplicateResponse = eDupe_Ignore;
-                kLog("New Duplicate Response:" @ StatChangeEffect.DuplicateResponse,
-                    true, default.bDeepLog);
-                kLog("New Duplicate Response:" @ X2Effect_PersistentStatChange(X2Effect_Persistent(AbilityTemplate.AbilityShooterEffects[idxEffect]).ApplyOnTick[idxStatBoost]).DuplicateResponse,
+                /*
+                if (class'X2ModConfig_KMP01'.default.Unstable)
+                {
+                    // Try to force removal by shed chance
+                    StatChangeEffect.iInitialShedChance = 100;
+                }
+                */
+                kLog("New Duplicate Response:"
+                    @ StatChangeEffect.DuplicateResponse,
                     true, default.bDeepLog);
                 break;
             }
@@ -120,4 +126,5 @@ private static function kRed(string Msg, bool bBypassRed=true)
 defaultproperties
 {
     bDeepLog=true
+    // class'X2ModConfig_KMP01'.default.Unstable
 }

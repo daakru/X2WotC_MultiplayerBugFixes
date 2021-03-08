@@ -31,17 +31,28 @@ tags=War of the Chosen, UI, Gameplay, Multiplayer, MP, bugfix, why firaxis why, 
     <Content Include="Config\XComEditor.ini" />
     <Content Include="Config\XComEngine.ini" />
     <Content Include="Config\XComGame.ini" />
-    <Content Include="Localization\XComGame.int" />
     <Content Include="Src\KMP01_MPBugFixes_dev\Classes\UIMPShell_SquadCostPanel_RemotePlayer_KMP01.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\KMP01_MPBugFixes_dev\Classes\UIScreenListener_TacticalHUD_KMP01.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\KMP01_MPBugFixes_dev\Classes\UIScreenListener_UIFinalShell_KMP01.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\KMP01_MPBugFixes_dev\Classes\UITacticalHUD_MouseControls_KMP01.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\KMP01_MPBugFixes_dev\Classes\X2DownloadableContentInfo_KMP01_MPBugFixes_dev.uc" />
+    <Content Include="Src\KMP01_MPBugFixes_dev\Classes\X2Effect_Persistent_KMP01.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\KMP01_MPBugFixes_dev\Classes\X2EventListener_RemovePersistentEffects_KMP01.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\KMP01_MPBugFixes_dev\Classes\X2ModConfig_KMP01.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\KMP01_MPBugFixes_dev\Classes\X2Helpers_Logger_KMP01.uc">
       <SubType>Content</SubType>
     </Content>
