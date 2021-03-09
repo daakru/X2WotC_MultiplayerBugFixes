@@ -18,12 +18,46 @@ static function array<X2DataTemplate> CreateTemplates()
 {
     local array<X2DataTemplate> Templates;
 
+    Templates.AddItem(CreateUnitGroupTurnBegunTemplate());
+    Templates.AddItem(CreateUnitGroupTurnEndedTemplate());
     Templates.AddItem(CreatePlayerTurnEndedTemplate());
 
     return Templates;
 }
 
 //---------------------------------------------------------------------------//
+
+static function X2EventListenerTemplate CreateUnitGroupTurnBegunTemplate()
+{
+    local X2EventListenerTemplate Template;
+
+    `CREATE_X2TEMPLATE(class'X2EventListenerTemplate', Template,
+        'UnitGroupTurnBegunListenerTemplate_KMP01');
+
+    // Should the Event Listener listen for the event during tactical missions?
+    Template.RegisterInTactical = true;
+    // Should listen to the event while on Avenger?
+    Template.RegisterInStrategy = false;
+    Template.AddEvent('UnitGroupTurnBegun', OnUnitGroupTurnEvent_KMP01);
+
+    return Template;
+}
+
+static function X2EventListenerTemplate CreateUnitGroupTurnEndedTemplate()
+{
+    local X2EventListenerTemplate Template;
+
+    `CREATE_X2TEMPLATE(class'X2EventListenerTemplate', Template,
+        'UnitGroupTurnEndedListenerTemplate_KMP01');
+
+    // Should the Event Listener listen for the event during tactical missions?
+    Template.RegisterInTactical = true;
+    // Should listen to the event while on Avenger?
+    Template.RegisterInStrategy = false;
+    Template.AddEvent('UnitGroupTurnEnded', OnUnitGroupTurnEvent_KMP01);
+
+    return Template;
+}
 
 static function X2EventListenerTemplate CreatePlayerTurnEndedTemplate()
 {
@@ -81,6 +115,92 @@ private static function array<name> Generate_PTE_ForceRemoveEffects()
 //---------------------------------------------------------------------------//
 
 /// <summary>
+/// Called on triggering a 'UnitGroupTurnBegun' or 'UnitGroupTurnEnded' Event
+/// </summary>
+/// <param name="EventData">    XComGameState_AIGroup that triggered the event </param>
+/// <param name="EventSource">  XComGameState_AIGroup that triggered the event </param>
+/// <param name="NewGameState"> New XComGameState built from the GameRule Context </param>
+static protected function EventListenerReturn OnUnitGroupTurnEvent_KMP01(
+    Object EventData,
+    Object EventSource,
+    XComGameState EventGameState,
+    Name EventID,  // 'UnitGroupTurnBegun' or 'UnitGroupTurnEnded'
+    Object CallbackData)  // None
+{
+    local XComGameState_AIGroup GroupState;
+    local XComGameState_Unit UnitState;
+    local XComGameStateHistory History;
+    local XComGameState NewGameState;
+    local bool bUnitStateModified;
+    local array<int> LivingMemberIDs;
+    local array<XComGameState_Unit> LivingMembers;
+    local int idx;
+    local XComGameState_Player CtrlPlayer;
+
+    History = `XCOMHISTORY;
+    GroupState = XComGameState_AIGroup(EventData);
+
+    kLog("Turn" @ (EventID == 'UnitGroupTurnBegun' ? "Begun" : "Ended") @ "for Group on team:" @ GroupState.TeamName @ "with Initiative Priority:" @ GroupState.InitiativePriority, true, default.bDeepLog);
+
+    NewGameState = class'XComGameStateContext_ChangeContainer'.static
+        .CreateChangeState("OnUnitGrouTurnEvent_KMP01: Remove Effects");
+
+    if (!GroupState.GetLivingMembers(LivingMemberIDs, LivingMembers))
+    {
+        // No Units in this Unit Group
+        kLog("No Units found in Group: Exiting ELR_NoInterrupt", true, default.bDeepLog);
+        return ELR_NoInterrupt;
+    }
+
+    foreach LivingMembers(UnitState, idx)
+    {
+        // Skip removed (evac'ed), non-selectable (mimic beacon),
+        //   cosmectic (gremlin), dead, and playerless (MOCX!) Units
+        if (UnitState == none || UnitState.bRemovedFromPlay
+            || UnitState.ControllingPlayer.ObjectID <= 0
+            || UnitState.GetMyTemplate().bNeverSelectable
+            || UnitState.GetMyTemplate().bIsCosmetic
+            || !UnitState.IsAlive())
+        {
+            continue;
+        }
+
+        CtrlPlayer = XComGameState_Player(History.GetGameStateForObjectID(
+            UnitState.ControllingPlayer.ObjectID));
+
+        kLog("Now Checking Unit:" @ UnitState.GetMPName(eNameType_FullNick)
+            $ "\n    Controlling Player:" @ CtrlPlayer.ObjectID
+                @ CtrlPlayer.PlayerName @ CtrlPlayer.TeamFlag,
+            true, default.bDeepLog);
+
+        if (CtrlPlayer.ObjectID > 0)
+        {
+            bUnitStateModified = ModifyUnitState(NewGameState, UnitState, EventID);
+            kLog("Unit with Template Name '" $ UnitState.GetMyTemplateName()
+                $ "', ID '" $ UnitState.ObjectID
+                $ "', and Name:" @ UnitState.GetMPName(eNameType_FullNick)
+                $ ": bUnitStateModified =" @ bUnitStateModified,
+                true, default.bDeepLog);
+        }
+    }
+
+    if (NewGameState.GetNumGameStateObjects() > 0)
+    {
+        kLog("Adding NewGameState with" @ NewGameState.GetNumGameStateObjects()
+            @ "modified State Objects to TacRules",
+            true, default.bDeepLog);
+        `TACTICALRULES.SubmitGameState(NewGameState);
+    }
+    else
+    {
+        kLog("Cleaning up Pending Game State",
+            true, default.bDeepLog);
+        History.CleanupPendingGameState(NewGameState);
+    }
+    return ELR_NoInterrupt;
+}
+
+/// <summary>
 /// Called when 'PlayerTurnEndedListenerTemplate_KMP01' is triggered by a 'PlayerTurnEnded' Event
 /// </summary>
 /// <param name="EventData">    XComGameState_Player of the Player whose turn is ending </param>
@@ -130,7 +250,7 @@ static protected function EventListenerReturn OnPlayerTurnEnded_KMP01(
         // Check if this Unit belongs to the Player whose turn is ending
         if (UnitState.ControllingPlayer.ObjectID == PlayerState.ObjectID)
         {
-            bUnitStateModified = ModifyUnitState(NewGameState, UnitState);
+            bUnitStateModified = ModifyUnitState(NewGameState, UnitState, EventID);
             kLog("Unit with Template Name '" $ UnitState.GetMyTemplateName()
                 $ "', ID '" $ UnitState.ObjectID
                 $ "', and Name:" @ UnitState.GetMPName(eNameType_FullNick)
@@ -146,9 +266,9 @@ static protected function EventListenerReturn OnPlayerTurnEnded_KMP01(
     if (NewGameState.GetNumGameStateObjects() > 0)
     {
         kLog("Adding NewGameState with" @ NewGameState.GetNumGameStateObjects()
-            @ "modified State Objects to History.",
+            @ "modified State Objects to TacRules",
             true, default.bDeepLog);
-        History.AddGameStateToHistory(NewGameState);
+        `TACTICALRULES.SubmitGameState(NewGameState);
     }
     else
     {
@@ -162,7 +282,8 @@ static protected function EventListenerReturn OnPlayerTurnEnded_KMP01(
 //---------------------------------------------------------------------------//
 
 static final function bool ModifyUnitState(XComGameState NewGameState,
-                                           XComGameState_Unit UnitState)
+                                           XComGameState_Unit UnitState,
+                                           optional name TriggeredEventID)
 {
     local array<name> PTE_ForceRemoveEffects;
     local XComGameState_Effect EffectState;
@@ -194,10 +315,6 @@ static final function bool ModifyUnitState(XComGameState NewGameState,
 
         kLog("Logging EffectState of '" $ EffectName $ "':"
             $ "\n    iTurnsRemaining:                   " @ EffectState.iTurnsRemaining
-            //$ "\n    iShedChance:                       " @ EffectState.iShedChance
-            //$ "\n    iStacks:                           " @ EffectState.iStacks
-            //$ "\n    AttacksReceived:                   " @ EffectState.AttacksReceived
-            //$ "\n    CreatedObjectReference.ObjectID:   " @ EffectState.CreatedObjectReference.ObjectID
             $ "\n    FullTurnsTicked:                   " @ EffectState.FullTurnsTicked
             $ "\n    StatChanges.Length:                " @ EffectState.StatChanges.Length
             $ "\n    ObjectID:                          " @ EffectState.ObjectID,
@@ -206,56 +323,77 @@ static final function bool ModifyUnitState(XComGameState NewGameState,
         PStatEffect = X2Effect_PersistentStatChange(PEffect);
 
         kLog("Logging Template of '" $ EffectName $ "':"
-            //$ "\n    TickTriggers.Length:               " @ PStatEffect.TickTriggers.Length
             $ "\n    iNumTurns:                         " @ PStatEffect.iNumTurns
-            //$ "\n    iInitialShedChance:                " @ PStatEffect.iInitialShedChance
-            //$ "\n    iPerTurnShedChance:                " @ PStatEffect.iPerTurnShedChance
             $ "\n    bInfiniteDuration:                 " @ PStatEffect.bInfiniteDuration
-            //$ "\n    bTickWhenApplied:                  " @ PStatEffect.bTickWhenApplied
-            //$ "\n    bCanTickEveryAction:               " @ PStatEffect.bCanTickEveryAction
-            //$ "\n    bConvertTurnsToActions:            " @ PStatEffect.bConvertTurnsToActions
-            //$ "\n    bRemoveWhenSourceDies:             " @ PStatEffect.bRemoveWhenSourceDies
-            //$ "\n    bRemoveWhenTargetDies:             " @ PStatEffect.bRemoveWhenTargetDies
-            //$ "\n    bRemoveWhenSourceDamaged:          " @ PStatEffect.bRemoveWhenSourceDamaged
-            //$ "\n    bRemoveWhenTargetConcealmentBroken:" @ PStatEffect.bRemoveWhenTargetConcealmentBroken
-            //$ "\n    bPersistThroughTacticalGameEnd:    " @ PStatEffect.bPersistThroughTacticalGameEnd
             $ "\n    bIgnorePlayerCheckOnTick:          " @ PStatEffect.bIgnorePlayerCheckOnTick
-            //$ "\n    bUniqueTarget:                     " @ PStatEffect.bUniqueTarget
-            //$ "\n    bStackOnRefresh:                   " @ PStatEffect.bStackOnRefresh
-            //$ "\n    bDupeForSameSourceOnly:            " @ PStatEffect.bDupeForSameSourceOnly
-            //$ "\n    bEffectForcesBleedout:             " @ PStatEffect.bEffectForcesBleedout
             $ "\n    DuplicateResponse:                 " @ PStatEffect.DuplicateResponse
             $ "\n    ApplyOnTick.Length:                " @ PStatEffect.ApplyOnTick.Length
             $ "\n    WatchRule:                         " @ PStatEffect.WatchRule
-            //$ "\n    CustomIdleOverrideAnim:            " @ PStatEffect.CustomIdleOverrideAnim
-            //$ "\n    EffectRank:                        " @ PStatEffect.EffectRank
-            //$ "\n    EffectName:                        " @ PStatEffect.EffectName
-            //$ "\n    BuffCategory:                      " @ PStatEffect.BuffCategory
-            //$ "\n    AbilitySourceName:                 " @ PStatEffect.AbilitySourceName
-            //$ "\n    bDisplayInUI:                      " @ PStatEffect.bDisplayInUI
-            //$ "\n    bDisplayInSpecialDamageMessageUI:  " @ PStatEffect.bDisplayInSpecialDamageMessageUI
             $ "\n    FriendlyName:                      " @ PStatEffect.FriendlyName
-            $ "\n    FriendlyDescription:               " @ PStatEffect.FriendlyDescription
-            /* $ "\n    IconImage:                         " @ PStatEffect.IconImage
-            $ "\n    SourceBuffCategory:                " @ PStatEffect.SourceBuffCategory
-            $ "\n    bSourceDisplayInUI:                " @ PStatEffect.bSourceDisplayInUI
-            $ "\n    SourceFriendlyName:                " @ PStatEffect.SourceFriendlyName
-            $ "\n    SourceFriendlyDescription:         " @ PStatEffect.SourceFriendlyDescription
-            $ "\n    SourceIconLabel:                   " @ PStatEffect.SourceIconLabel
-            $ "\n    StatusIcon:                        " @ PStatEffect.StatusIcon
-            $ "\n    EffectHierarchyValue:              " @ PStatEffect.EffectHierarchyValue
-            $ "\n    EffectAppliedEventName:            " @ PStatEffect.EffectAppliedEventName
-            $ "\n    ChanceEventTriggerName:            " @ PStatEffect.ChanceEventTriggerName
-            $ "\n    EffectTickedFn:                    " @ PStatEffect.EffectTickedFn */,
+            $ "\n    FriendlyDescription:               " @ PStatEffect.FriendlyDescription,
             true, default.bDeepLog);
-        if (class'X2ModConfig_KMP01'.default.Unstable)
+
+        // Disable Developmental Features
+        if (!class'X2ModConfig_KMP01'.default.Unstable)
         {
-            kLog("Removing Effect:" @ EffectName, true, default.bDeepLog);
-            EffectState = XComGameState_Effect(NewGameState
-                .ModifyStateObject(EffectState.Class, EffectState.ObjectID));
+            switch (TriggeredEventID)
+            {
+                case 'PlayerTurnBegun':
+                    break;
+                case 'UnitGroupTurnBegun':
+                    break;
+                case 'PlayerTurnEnded':
+                    if (EffectName == 'HunkerDown')
+                    {
+                        // Apply Semi-Fix for Deep Cover
+                        kLog("PlayerTurnEnded: Removing Effect:" @ EffectName, true, default.bDeepLog);
+                        EffectState = XComGameState_Effect(NewGameState
+                            .ModifyStateObject(EffectState.Class, EffectState.ObjectID));
             
-            EffectState.RemoveEffect(NewGameState, NewGameState);
-            bModified = true;
+                        EffectState.RemoveEffect(NewGameState, NewGameState);
+                        bModified = true;
+                    }
+                    break;
+                case 'UnitGroupTurnEnded':
+                    break;
+                default:
+                    break;
+            }
+        }
+        // Enable Developmental Features
+        else
+        {
+            switch (TriggeredEventID)
+            {
+                case 'PlayerTurnBegun':
+                    break;
+                case 'UnitGroupTurnBegun':
+                    if (EffectName == 'HunkerDown')
+                    {
+                        kLog("UnitGroupTurnBegun: Removing Effect:" @ EffectName, true, default.bDeepLog);
+                        EffectState = XComGameState_Effect(NewGameState
+                            .ModifyStateObject(EffectState.Class, EffectState.ObjectID));
+            
+                        EffectState.RemoveEffect(NewGameState, NewGameState);
+                        bModified = true;
+                    }
+                    break;
+                case 'PlayerTurnEnded':
+                    break;
+                case 'UnitGroupTurnEnded':
+                    if (EffectName == 'SteadyHandsStatBoost')
+                    {
+                        kLog("UnitGroupTurnEnded: Removing Effect:" @ EffectName, true, default.bDeepLog);
+                        EffectState = XComGameState_Effect(NewGameState
+                            .ModifyStateObject(EffectState.Class, EffectState.ObjectID));
+            
+                        EffectState.RemoveEffect(NewGameState, NewGameState);
+                        bModified = true;
+                    }
+                    break;
+                default:
+                    break;
+            }
         }
     }
     return bModified;

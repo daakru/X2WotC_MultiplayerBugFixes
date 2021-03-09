@@ -90,13 +90,7 @@ static function PatchSteadyHands()
                     @ StatChangeEffect.DuplicateResponse,
                     true, default.bDeepLog);
                 StatChangeEffect.DuplicateResponse = eDupe_Ignore;
-                /*
-                if (class'X2ModConfig_KMP01'.default.Unstable)
-                {
-                    // Try to force removal by shed chance
-                    StatChangeEffect.iInitialShedChance = 100;
-                }
-                */
+                StatChangeEffect.bDisplayInUI = true;
                 kLog("New Duplicate Response:"
                     @ StatChangeEffect.DuplicateResponse,
                     true, default.bDeepLog);
