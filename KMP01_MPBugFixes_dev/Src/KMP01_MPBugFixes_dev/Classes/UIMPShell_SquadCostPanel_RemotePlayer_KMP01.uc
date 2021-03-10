@@ -1,7 +1,7 @@
 /*                                                                             
  * FILE:     UIMPShell_SquadCostPanel_RemotePlayer_KMP01.uc
  * AUTHOR:   Kinetos#6935, https://steamcommunity.com/id/kinetos/
- * VERSION:  KMP01 v0.0
+ * VERSION:  KMP01
  *
  * MCO of UIMPShell_SquadCostPanel.uc to hide Squad Loadout Name from opponent.
  *

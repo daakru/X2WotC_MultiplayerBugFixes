@@ -1,7 +1,7 @@
 /*                                                                             
  * FILE:     X2Helpers_Logger_KMP01.uc
  * AUTHOR:   Kinetos#6935, https://steamcommunity.com/id/kinetos/
- * VERSION:  KMP01-L v0.3
+ * VERSION:  KMP01-L v0.3.1
  *
  * Description.
  *
@@ -47,11 +47,12 @@ static function kLogger(string Message, bool verbose, bool deeplog)
     {
         sfs = GetScriptTrace();
         ParseStringIntoArray(sfs, sfslines, "\n", false);
-        // The last two lines are for our DeepLogger and dLog calls so skip those
+        // Last two lines are for our DeepLogger and dLog calls so skip those
         sfs = Split(sfslines[sfslines.Length - 4], "F");
         dlci = Split(sfs, " ", true);
         dlcisplit = SplitString(dlci, ".");
-        `log(dlcisplit[0] @ dlcisplit[1] $ "\n    " $ Message, , 'KMP01_DEEPLOG');
+        `log(dlcisplit[0] @ dlcisplit[1] $ "\n    "
+            $ Message, , 'KMP01_DEEPLOG');
     }
 }
 
@@ -69,14 +70,15 @@ static function DeepLogger(string Message, bool verbose, bool cfgoverride)
     {
         sfs = GetScriptTrace();
         ParseStringIntoArray(sfs, sfslines, "\n", false);
-        // The last two lines are for our DeepLogger and dLog calls so skip those    
+        // Last two lines are for our DeepLogger and dLog calls so skip those    
         for (i = sfslines.Length - 1; i > 0; i--)
         {
             sfs = Split(sfslines[i], "F");
             dlci = Split(sfs, " ", true);
             dlcisplit = SplitString(dlci, ".");
             //`log(sfs, , name(dlcisplit[0]));
-            `log(dlcisplit[0] @ dlcisplit[1] $ "\n    " $ Message, , 'KMP01_DEEPLOG');
+            `log(dlcisplit[0] @ dlcisplit[1] $ "\n    "
+                $ Message, , 'KMP01_DEEPLOG');
         }
     }
 }

@@ -1,7 +1,7 @@
 /*                                                                             
  * FILE:     X2EventListener_RemovePersistentEffects_KMP01.uc
  * AUTHOR:   Kinetos#6935, https://steamcommunity.com/id/kinetos/
- * VERSION:  KMP01 v0.0
+ * VERSION:  KMP01
  *
  * Register Event Listeners to Remove Persistent Effects that aren't ticking.
  *
@@ -88,30 +88,6 @@ private static function array<name> Generate_PTE_ForceRemoveEffects()
     return EffectList;
 }
 
-/**
- *  Triggered on Line 4574 in X2TacticalGameRuleset.uc
- *
- *  PlayerState = XComGameState_Player(CachedHistory.GetGameStateForObjectID(PreviousPlayerRef.ObjectID));
- *  Context = class'XComGameStateContext_TacticalGameRule'.static.BuildContextFromGameRule(eGameRule_PlayerTurnEnd);
- *  Context.PlayerRef = PreviousPlayerRef;
- *  NewGameState = Context.ContextBuildGameState();
- *
- *  EventManager.TriggerEvent('PlayerTurnEnded', PlayerState, PlayerState, NewGameState);
- */
-
-/**
- *  Triggers the specified event, queueing up all listeners for this event to be processed 
- *  during their specified Event Window.  Also, immediately triggers the ELD_Immediate event window.
- *
- *  @param EventID is the handle for the type of event that has been triggered.
- *  @param EventData is the optional object containing the data relevant to this event's triggered state.
- *  @param EventSource is the optional object to be considered the source of this event (used for pre-filtering).
- *
- *  @return TRUE iff any event listener with ELD_Immediate specified for this event executes and causes an event interrupt
- *
- *  native function bool TriggerEvent( Name EventID, optional Object EventData, optional Object EventSource, optional XComGameState EventGameState );
- */
-
 //---------------------------------------------------------------------------//
 
 /// <summary>
@@ -189,7 +165,15 @@ static protected function EventListenerReturn OnUnitGroupTurnEvent_KMP01(
         kLog("Adding NewGameState with" @ NewGameState.GetNumGameStateObjects()
             @ "modified State Objects to TacRules",
             true, default.bDeepLog);
-        `TACTICALRULES.SubmitGameState(NewGameState);
+        // `TACTICALRULES.SubmitGameState(NewGameState);
+        if (class'X2ModConfig_KMP01'.default.Unstable)
+        {
+            History.AddGameStateToHistory(NewGameState);
+        }
+        else
+        {
+            `TACTICALRULES.SubmitGameState(NewGameState);
+        }
     }
     else
     {
@@ -199,6 +183,8 @@ static protected function EventListenerReturn OnUnitGroupTurnEvent_KMP01(
     }
     return ELR_NoInterrupt;
 }
+
+//---------------------------------------------------------------------------//
 
 /// <summary>
 /// Called when 'PlayerTurnEndedListenerTemplate_KMP01' is triggered by a 'PlayerTurnEnded' Event
@@ -268,7 +254,15 @@ static protected function EventListenerReturn OnPlayerTurnEnded_KMP01(
         kLog("Adding NewGameState with" @ NewGameState.GetNumGameStateObjects()
             @ "modified State Objects to TacRules",
             true, default.bDeepLog);
-        `TACTICALRULES.SubmitGameState(NewGameState);
+        // `TACTICALRULES.SubmitGameState(NewGameState);
+        if (class'X2ModConfig_KMP01'.default.Unstable)
+        {
+            History.AddGameStateToHistory(NewGameState);
+        }
+        else
+        {
+            `TACTICALRULES.SubmitGameState(NewGameState);
+        }
     }
     else
     {
@@ -333,7 +327,40 @@ static final function bool ModifyUnitState(XComGameState NewGameState,
             $ "\n    FriendlyDescription:               " @ PStatEffect.FriendlyDescription,
             true, default.bDeepLog);
 
-        // Disable Developmental Features
+        // Universal Features
+        switch (TriggeredEventID)
+        {
+            case 'PlayerTurnBegun':
+                break;
+            case 'UnitGroupTurnBegun':
+                if (EffectName == 'HunkerDown')
+                {
+                    kLog("UnitGroupTurnBegun: Removing Effect:" @ EffectName, true, default.bDeepLog);
+                    EffectState = XComGameState_Effect(NewGameState
+                        .ModifyStateObject(EffectState.Class, EffectState.ObjectID));
+            
+                    EffectState.RemoveEffect(NewGameState, NewGameState);
+                    bModified = true;
+                }
+                break;
+            case 'PlayerTurnEnded':
+                break;
+            case 'UnitGroupTurnEnded':
+                if (EffectName == 'SteadyHandsStatBoost')
+                {
+                    kLog("UnitGroupTurnEnded: Removing Effect:" @ EffectName, true, default.bDeepLog);
+                    EffectState = XComGameState_Effect(NewGameState
+                        .ModifyStateObject(EffectState.Class, EffectState.ObjectID));
+            
+                    EffectState.RemoveEffect(NewGameState, NewGameState);
+                    bModified = true;
+                }
+                break;
+            default:
+                break;
+        }
+
+        // Enable Stable Only Features
         if (!class'X2ModConfig_KMP01'.default.Unstable)
         {
             switch (TriggeredEventID)
@@ -343,16 +370,6 @@ static final function bool ModifyUnitState(XComGameState NewGameState,
                 case 'UnitGroupTurnBegun':
                     break;
                 case 'PlayerTurnEnded':
-                    if (EffectName == 'HunkerDown')
-                    {
-                        // Apply Semi-Fix for Deep Cover
-                        kLog("PlayerTurnEnded: Removing Effect:" @ EffectName, true, default.bDeepLog);
-                        EffectState = XComGameState_Effect(NewGameState
-                            .ModifyStateObject(EffectState.Class, EffectState.ObjectID));
-            
-                        EffectState.RemoveEffect(NewGameState, NewGameState);
-                        bModified = true;
-                    }
                     break;
                 case 'UnitGroupTurnEnded':
                     break;
@@ -360,7 +377,7 @@ static final function bool ModifyUnitState(XComGameState NewGameState,
                     break;
             }
         }
-        // Enable Developmental Features
+        // Enable Developmental Only Features
         else
         {
             switch (TriggeredEventID)
@@ -368,28 +385,10 @@ static final function bool ModifyUnitState(XComGameState NewGameState,
                 case 'PlayerTurnBegun':
                     break;
                 case 'UnitGroupTurnBegun':
-                    if (EffectName == 'HunkerDown')
-                    {
-                        kLog("UnitGroupTurnBegun: Removing Effect:" @ EffectName, true, default.bDeepLog);
-                        EffectState = XComGameState_Effect(NewGameState
-                            .ModifyStateObject(EffectState.Class, EffectState.ObjectID));
-            
-                        EffectState.RemoveEffect(NewGameState, NewGameState);
-                        bModified = true;
-                    }
                     break;
                 case 'PlayerTurnEnded':
                     break;
                 case 'UnitGroupTurnEnded':
-                    if (EffectName == 'SteadyHandsStatBoost')
-                    {
-                        kLog("UnitGroupTurnEnded: Removing Effect:" @ EffectName, true, default.bDeepLog);
-                        EffectState = XComGameState_Effect(NewGameState
-                            .ModifyStateObject(EffectState.Class, EffectState.ObjectID));
-            
-                        EffectState.RemoveEffect(NewGameState, NewGameState);
-                        bModified = true;
-                    }
                     break;
                 default:
                     break;

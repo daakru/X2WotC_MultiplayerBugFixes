@@ -1,7 +1,7 @@
 /*                                                                             
  * FILE:     XComGameState_Ability_KMP01.uc
  * AUTHOR:   Kinetos#6935, https://steamcommunity.com/id/kinetos/
- * VERSION:  KMP01 v0.1
+ * VERSION:  KMP01
  *
  * MCO of XComGameState_Ability.uc to debug Deep Cover.
  *

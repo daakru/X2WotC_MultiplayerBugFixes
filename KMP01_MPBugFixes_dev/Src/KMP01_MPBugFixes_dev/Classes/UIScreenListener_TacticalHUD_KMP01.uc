@@ -1,7 +1,7 @@
 /*                                                                             
  * FILE:     UIScreenListener_TacticalHUD_KMP01.uc
  * AUTHOR:   Kinetos#6935, https://steamcommunity.com/id/kinetos/
- * VERSION:  KMP01 v0.0
+ * VERSION:  KMP01
  *
  * UISL for the UITacticalHUD to add buttons to commander abilities bar.
  *

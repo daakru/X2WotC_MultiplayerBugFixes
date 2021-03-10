@@ -1,7 +1,7 @@
 /*                                                                             
  * FILE:     XComGameState_Effect_KMP01.uc
  * AUTHOR:   Kinetos#6935, https://steamcommunity.com/id/kinetos/
- * VERSION:  KMP01 v0.1
+ * VERSION:  KMP01
  *
  * MCO of XComGameState_Effect.uc to debug effect removal conditions.
  *

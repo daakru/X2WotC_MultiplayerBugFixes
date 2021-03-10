@@ -1,7 +1,7 @@
 /*                                                                             
  * FILE:     UITacticalHUD_MouseControls_KMP01.uc
  * AUTHOR:   Kinetos#6935, https://steamcommunity.com/id/kinetos/
- * VERSION:  KMP01 v0.1
+ * VERSION:  KMP01
  *
  * MCO of UITacticalHUD_MouseControls.uc to add custom commander abilities.
  *

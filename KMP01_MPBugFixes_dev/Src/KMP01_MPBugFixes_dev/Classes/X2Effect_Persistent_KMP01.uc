@@ -1,7 +1,7 @@
 /*                                                                             
  * FILE:     X2Effect_Persistent_KMP01.uc
  * AUTHOR:   Kinetos#6935, https://steamcommunity.com/id/kinetos/
- * VERSION:  KMP01 v0.0
+ * VERSION:  KMP01
  *
  * MCO of X2Effect_Persistent.uc to debug effect removal conditions.
  *

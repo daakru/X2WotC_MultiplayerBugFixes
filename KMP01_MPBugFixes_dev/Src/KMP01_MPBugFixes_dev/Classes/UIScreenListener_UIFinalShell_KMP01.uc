@@ -1,18 +1,24 @@
-//---------------------------------------------------------------------------------------
-//  FILE:   UISL Config Warning.uc                                    
-//           
-//	ORIGINAL CREATED BY SHIREMCT
-//	BEGIN EDITS BY RUSTYDIOS	21/02/21	03:00
-//	LAST EDITED BY RUSTYDIOS	24/02/21	23:10
-// 
-//		!!	DONT FORGET TO ACTUALLY UPDATE THE CONFIG NUMBER ON UPDATES	!!
-//	EACH MOD SHOULD HAVE UNIQUE CLASS_NAME AND CONFIG FILE
-//	ALSO A LOCALIZATION\MODNAME.INT WITH THE STRINGS UNDER THE HEADER [CLASS_NAME]
-//
-//---------------------------------------------------------------------------------------
-class UIScreenListener_UIFinalShell_KMP01 extends UIScreenListener;
+/*                                                                             
+ * FILE:     UIScreenListener_UIFinalShell_KMP01.uc
+ * AUTHOR:   Kinetos#6935, https://steamcommunity.com/id/kinetos/
+ * VERSION:  KMP01
+ *
+ * UISL for the Main Menu screen.
+ * Display a warning when Developmental Functionality is enabled.
+ *
+ * Based primarily on UIMainMenu_ScreenListener_PBNCE.uc by shiremct.
+ * Copyright (c) 2016 Firaxis Games, Inc. All rights reserved.
+ */
 
-var localized string strMessage_Title, strMessage_Header, strMessage_Body, strDismiss_Button;
+class UIScreenListener_UIFinalShell_KMP01 extends UIScreenListener
+    config(Game);
+
+var localized string strMessage_Title;
+var localized string strMessage_Header;
+var localized string strMessage_Body;
+var localized string strDismiss_Button;
+
+//---------------------------------------------------------------------------//
 
 var UIBGBox         WarningPanelBG;
 var UIPanel         WarningPanel;
@@ -22,85 +28,85 @@ var UITextContainer WarningHeader;
 var UITextContainer WarningBody;
 var UIButton        DismissButton;
 
+var string          imgWarning;
+
+//---------------------------------------------------------------------------//
+
 event OnInit(UIScreen Screen)
 {
-    // DO WE CREATE THIS OR NOT
     if(ShouldShowWarningMsg())
     {
 	    CreatePanel_ConfigWarning(Screen);
     }
-
-    return;
 }
 
-simulated function CreatePanel_ConfigWarning(UIScreen Screen)
+//---------------------------------------------------------------------------//
+
+private function CreatePanel_ConfigWarning(UIScreen Screen)
 {
-    local int X;
-    local int Y;
-    local int W;
-    local int H;
-
-    // pos x, pos y, width, height
-    X = 500;
-    Y = 300;
-    W = 800;
-    H = 420;
-
-    // CREATE A PANEL WITH A BACKGROUND PANEL AND LITTLE IMAGE
+    // Warning Panel
     WarningPanelBG = Screen.Spawn(class'UIBGBox', Screen);
     WarningPanelBG.LibID = class'UIUtilities_Controls'.const.MC_X2Background;
-    WarningPanelBG.InitBG('ConfigPopup_BG', X, Y, W, H);
+    WarningPanelBG.InitBG('ConfigPopup_BG', 500, 300, 800, 420);  // X, Y, H, W
 
     WarningPanel = Screen.Spawn(class'UIPanel', Screen);
     WarningPanel.InitPanel('ConfigPopup');
-    WarningPanel.SetSize(WarningPanelBG.Width, WarningPanelBG.Height);  //800*420
-    WarningPanel.SetPosition(WarningPanelBG.X, WarningPanelBG.Y);       //500, 300
+    WarningPanel.SetSize(WarningPanelBG.Width, WarningPanelBG.Height);
+    WarningPanel.SetPosition(WarningPanelBG.X, WarningPanelBG.Y);
 
+    // Warning Image
     WarningImage = Screen.Spawn(class'UIImage', Screen);
-    WarningImage.InitImage(, "img:///UILibrary_Common.TargetIcons.Hack_satelite_icon");
-    WarningImage.SetScale(1.0);
-    WarningImage.SetPosition(WarningPanelBG.X + WarningPanelBG.Width - 90, WarningPanelBG.Y + 20);
+    WarningImage.InitImage('KMP01_WarningImage', default.imgWarning);
+    //WarningImage.SetScale(1.0);
+    WarningImage.SetOrigin(class'UIUtilities'.const.ANCHOR_TOP_RIGHT);
+    WarningImage.SetPosition(WarningPanelBG.X + WarningPanelBG.Width,
+                             WarningPanelBG.Y + 20);
 
-    // CREATE A TITLE, COOLONE WITH THE HAZARD BAR
+    // Warning Title
     WarningTitle = Screen.Spawn(class'UIX2PanelHeader', WarningPanel);
-    WarningTitle.InitPanelHeader('', class'UIUtilities_Text'.static.GetColoredText(strMessage_Title, eUIState_Bad, 32), "");  // red
-    WarningTitle.SetPosition(WarningTitle.X + 10, WarningTitle.Y + 10);  // 510, 310
-    WarningTitle.SetHeaderWidth(WarningPanel.Width - 20);                // 780
+    WarningTitle.InitPanelHeader('', class'UIUtilities_Text'.static
+        .GetColoredText(strMessage_Title, eUIState_Bad, 32), "");
+    WarningTitle.SetPosition(WarningTitle.X + 10, WarningTitle.Y + 10);
+    WarningTitle.SetHeaderWidth(WarningPanel.Width - 20);
 
-    // CREATE A ONE LINE HEADER
+    // Warning Header
     WarningHeader = Screen.Spawn(class'UITextContainer', WarningPanel);
     WarningHeader.InitTextContainer();
     WarningHeader.bAutoScroll = true;
-    WarningHeader.SetSize(WarningPanelBG.Width - 40, 30);                  // 760, 30
-    WarningHeader.SetPosition(WarningHeader.X + 20, WarningHeader.Y +60);  // 520, 360
+    WarningHeader.SetSize(WarningPanelBG.Width - 40, 30);
+    WarningHeader.SetPosition(WarningHeader.X + 20, WarningHeader.Y +60);
 
-    WarningHeader.Text.SetHTMLText( class'UIUtilities_Text'.static.StyleText(strMessage_Header, eUITextStyle_Tooltip_H1, eUIState_Warning2));	//orange
+    WarningHeader.Text.SetHTMLText( class'UIUtilities_Text'.static.StyleText(
+        strMessage_Header, eUITextStyle_Tooltip_H1, eUIState_Warning2));
 	
-    // CREATE THE ACTUAL MESSAGE
+    // Warning Body
     WarningBody = Screen.Spawn(class'UITextContainer', WarningPanel);
     WarningBody.InitTextContainer();
     WarningBody.bAutoScroll = true;
-    WarningBody.SetSize(WarningPanelBG.Width - 40, WarningPanelBG.Height - 100);  // 760, 320
-    WarningBody.SetPosition(WarningBody.X +20, WarningBody.Y + 90);               // 520, 390
+    WarningBody.SetSize(WarningPanelBG.Width - 40,
+                        WarningPanelBG.Height - 100);
+    WarningBody.SetPosition(WarningBody.X +20, WarningBody.Y + 90);
 
-    WarningBody.Text.SetHTMLText( class'UIUtilities_Text'.static.StyleText(strMessage_Body, eUITextStyle_Tooltip_Body, eUIState_Normal));	//cyan
+    WarningBody.Text.SetHTMLText( class'UIUtilities_Text'.static.StyleText(
+        strMessage_Body, eUITextStyle_Tooltip_Body, eUIState_Normal));
     WarningBody.Text.SetHeight(WarningBody.Text.Height * 3.0f);                   
 
-    // CREATE A DISMISS BUTTON
+    // Dismiss Button
     DismissButton = Screen.Spawn(class'UIButton', WarningPanel);
-    DismissButton.InitButton('DismissButton', strDismiss_Button, DismissButtonHandler, );
+    DismissButton.InitButton('DismissButton', strDismiss_Button,
+        DismissButtonHandler, );
     DismissButton.SetSize(760, 30); 
     DismissButton.SetResizeToText(true);
-    DismissButton.AnchorTopCenter();  //AUTO
-    DismissButton.OriginTopCenter();  //AUTO
-    DismissButton.SetPosition(DismissButton.X - 60, WarningPanelBG.Y +350);
+    DismissButton.AnchorTopCenter();
+    DismissButton.OriginTopCenter();
+    DismissButton.SetPosition(DismissButton.X - 60, WarningPanelBG.Y + 350);
 }
 
-// CLEAR EVERYTHING ON BUTTON PRESS
-simulated function DismissButtonHandler(UIButton Button)
+//---------------------------------------------------------------------------//
+
+private function DismissButtonHandler(UIButton Button)
 {
     DismissButton.Remove();
-
     WarningBody.Remove();
     WarningHeader.Remove();
     WarningTitle.Remove();
@@ -109,9 +115,10 @@ simulated function DismissButtonHandler(UIButton Button)
     WarningPanelBG.Remove();
 }
 
-// SHOULD WE DISPLAY THE POPUP
-static function bool ShouldShowWarningMsg()
-{ 
+//---------------------------------------------------------------------------//
+
+private function bool ShouldShowWarningMsg()
+{
     if (class'X2ModConfig_KMP01'.default.Unstable)
     {	
         return true; 
@@ -119,8 +126,10 @@ static function bool ShouldShowWarningMsg()
     return false;
 }
 
-// DO THIS IS ONLY ON THE FINAL SHELL - MAIN MENU SCREEN IN REVIEW MODE
+//---------------------------------------------------------------------------//
+
 defaultproperties
 {
-    ScreenClass = UIFinalShell;
+    ScreenClass=UIFinalShell
+    imgWarning="UILibrary_StrategyImages.ScienceIcons.IC_AutopsyCyberdisc"
 }

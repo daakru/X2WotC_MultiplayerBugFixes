@@ -1,7 +1,7 @@
 /*                                                                             
  * FILE:     XComDownloadableContentInfo_KMP01_MPBugFixes_dev.uc
  * AUTHOR:   Kinetos#6935, https://steamcommunity.com/id/kinetos/
- * VERSION:  KMP01 v0.1
+ * VERSION:  KMP01 v1.3.3
  *
  * Specify Mod behavior on campaign creation or initial saved game load.
  *
@@ -9,9 +9,11 @@
  */
 
 class X2DownloadableContentInfo_KMP01_MPBugFixes_dev
-        extends X2DownloadableContentInfo;
+    extends X2DownloadableContentInfo;
 
 var bool bDeepLog;
+
+var const config string Version;
 
 //---------------------------------------------------------------------------//
 
@@ -34,6 +36,9 @@ static event InstallNewCampaign(XComGameState StartState) {}
 /// </summary>
 static event OnPostTemplatesCreated()
 {
+    kLog("Loading MP Bug-Spray" @ (class'X2ModConfig_KMP01'.default.Unstable
+        ? "Dev" : "Stable") @ "(Version" @ default.Version $ ")",
+        true, default.bDeepLog); 
     PatchSteadyHands();
 }
 
@@ -90,7 +95,7 @@ static function PatchSteadyHands()
                     @ StatChangeEffect.DuplicateResponse,
                     true, default.bDeepLog);
                 StatChangeEffect.DuplicateResponse = eDupe_Ignore;
-                StatChangeEffect.bDisplayInUI = true;
+                StatChangeEffect.StatusIcon = StatChangeEffect.IconImage;
                 kLog("New Duplicate Response:"
                     @ StatChangeEffect.DuplicateResponse,
                     true, default.bDeepLog);

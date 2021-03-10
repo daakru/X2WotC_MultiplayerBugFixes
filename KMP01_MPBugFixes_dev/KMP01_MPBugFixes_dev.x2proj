@@ -62,6 +62,9 @@ tags=War of the Chosen, UI, Gameplay, Multiplayer, MP, bugfix, why firaxis why, 
     <Content Include="Src\KMP01_MPBugFixes_dev\Classes\XComGameState_Effect_KMP01.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\KMP01_MPBugFixes_dev\Classes\XComGameState_Unit_KMP01.uc">
+      <SubType>Content</SubType>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildLocalExtensionPath)\XCOM2.targets" />
 </Project>
