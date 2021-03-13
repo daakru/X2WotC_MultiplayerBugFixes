@@ -5,11 +5,14 @@
  *
  * Add config variables to be referenced by other classes.
  *
+ * Dependencies: None
+ *
  * Copyright (c) 2016 Firaxis Games, Inc. All rights reserved.
  */
 
 class X2ModConfig_KMP01 extends Object abstract config(Game);
 
+var const config string Version;
 var const config bool Unstable;
 
 //---------------------------------------------------------------------------//

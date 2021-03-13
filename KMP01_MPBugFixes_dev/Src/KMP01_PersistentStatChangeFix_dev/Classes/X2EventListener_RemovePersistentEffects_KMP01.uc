@@ -5,6 +5,8 @@
  *
  * Register Event Listeners to Remove Persistent Effects that aren't ticking.
  *
+ * Dependencies: X2ModConfig_KMP01; X2Helpers_Logger_KMP01
+ *
  * Copyright (c) 2016 Firaxis Games, Inc. All rights reserved.
  */
 
@@ -20,6 +22,7 @@ static function array<X2DataTemplate> CreateTemplates()
 
     Templates.AddItem(CreateUnitGroupTurnBegunTemplate());
     Templates.AddItem(CreateUnitGroupTurnEndedTemplate());
+    Templates.AddItem(CreatePlayerTurnBegunTemplate());
     Templates.AddItem(CreatePlayerTurnEndedTemplate());
 
     return Templates;
@@ -59,6 +62,22 @@ static function X2EventListenerTemplate CreateUnitGroupTurnEndedTemplate()
     return Template;
 }
 
+static function X2EventListenerTemplate CreatePlayerTurnBegunTemplate()
+{
+    local X2EventListenerTemplate Template;
+
+    `CREATE_X2TEMPLATE(class'X2EventListenerTemplate', Template,
+        'PlayerTurnBegunListenerTemplate_KMP01');
+
+    // Should the Event Listener listen for the event during tactical missions?
+    Template.RegisterInTactical = true;
+    // Should listen to the event while on Avenger?
+    Template.RegisterInStrategy = false;
+    Template.AddEvent('PlayerTurnBegun', OnPlayerTurnEvent_KMP01);
+
+    return Template;
+}
+
 static function X2EventListenerTemplate CreatePlayerTurnEndedTemplate()
 {
     local X2EventListenerTemplate Template;
@@ -70,7 +89,7 @@ static function X2EventListenerTemplate CreatePlayerTurnEndedTemplate()
     Template.RegisterInTactical = true;
     // Should listen to the event while on Avenger?
     Template.RegisterInStrategy = false;
-    Template.AddEvent('PlayerTurnEnded', OnPlayerTurnEnded_KMP01);
+    Template.AddEvent('PlayerTurnEnded', OnPlayerTurnEvent_KMP01);
 
     return Template;
 }
@@ -165,19 +184,95 @@ static protected function EventListenerReturn OnUnitGroupTurnEvent_KMP01(
         kLog("Adding NewGameState with" @ NewGameState.GetNumGameStateObjects()
             @ "modified State Objects to TacRules",
             true, default.bDeepLog);
-        // `TACTICALRULES.SubmitGameState(NewGameState);
-        if (class'X2ModConfig_KMP01'.default.Unstable)
-        {
-            History.AddGameStateToHistory(NewGameState);
-        }
-        else
-        {
-            `TACTICALRULES.SubmitGameState(NewGameState);
-        }
+        `TACTICALRULES.SubmitGameState(NewGameState);
     }
     else
     {
         kLog("Cleaning up Pending Game State",
+            true, default.bDeepLog);
+        History.CleanupPendingGameState(NewGameState);
+    }
+    return ELR_NoInterrupt;
+}
+
+//---------------------------------------------------------------------------//
+
+/// <summary>
+/// Called on triggering a 'PlayerTurnBegun' or 'PlayerTurnEnded' Event
+/// </summary>
+/// <param name="EventData">    XComGameState_Player that triggered the event </param>
+/// <param name="EventSource">  XComGameState_Player that triggered the event </param>
+/// <param name="NewGameState"> New XComGameState built from the GameRule Context </param>
+static protected function EventListenerReturn OnPlayerTurnEvent_KMP01(
+    Object EventData,
+    Object EventSource,
+    XComGameState EventGameState,
+    Name EventID,  // 'PlayerTurnEnded' or 'PlayerTurnEnded'
+    Object CallbackData)  // None
+{
+    local XComGameState_Player PlayerState;
+    local XComGameState_Unit UnitState;
+    local XComGameStateHistory History;
+    local XComGameState NewGameState;
+    local bool bUnitStateModified;
+    
+    History = `XCOMHISTORY;
+    PlayerState = XComGameState_Player(EventData);
+
+    kLog("Turn" @ PlayerState.PlayerTurnCount @ (EventID == 'PlayerTurnBegun'
+        ? "Begun" : "Ended") @ "for Player:" @ PlayerState.ObjectID
+        @ PlayerState.PlayerName @ PlayerState.TeamFlag,
+        true, default.bDeepLog);
+
+    NewGameState = class'XComGameStateContext_ChangeContainer'.static
+        .CreateChangeState("OnPlayerTurnEnded_KMP01: Remove Effects");
+
+    foreach History.IterateByClassType(class'XComGameState_Unit', UnitState)
+    {
+        // Skip removed (evac'ed), non-selectable (mimic beacon),
+        //   cosmectic (gremlin), dead, and playerless (MOCX!) Units
+        if (UnitState == none || UnitState.bRemovedFromPlay
+            || UnitState.ControllingPlayer.ObjectID <= 0
+            || UnitState.GetMyTemplate().bNeverSelectable
+            || UnitState.GetMyTemplate().bIsCosmetic
+            || !UnitState.IsAlive())
+        {
+            continue;
+        }
+
+        kLog("Now Checking Unit:" @ UnitState.GetMPName(eNameType_FullNick)
+            $ "\n    Ending Player:     " @ PlayerState.ObjectID
+                @ PlayerState.PlayerName @ PlayerState.TeamFlag
+            $ "\n    Controlling Player:"
+                @ UnitState.ControllingPlayer.ObjectID,
+            true, default.bDeepLog);
+
+        // Check if this Unit belongs to the Player whose turn is ending
+        if (UnitState.ControllingPlayer.ObjectID == PlayerState.ObjectID)
+        {
+            bUnitStateModified = ModifyUnitState(NewGameState, UnitState, EventID);
+            kLog("Unit with Template Name '" $ UnitState.GetMyTemplateName()
+                $ "', ID '" $ UnitState.ObjectID
+                $ "', and Name:" @ UnitState.GetMPName(eNameType_FullNick)
+                $ ": bUnitStateModified =" @ bUnitStateModified,
+                true, default.bDeepLog);
+        }
+        else
+        {
+            // TODO: Handle Units controlled by another Player
+        }
+    }
+
+    if (NewGameState.GetNumGameStateObjects() > 0)
+    {
+        kLog("Adding NewGameState with" @ NewGameState.GetNumGameStateObjects()
+            @ "modified State Objects to TacRules",
+            true, default.bDeepLog);
+        `TACTICALRULES.SubmitGameState(NewGameState);
+    }
+    else
+    {
+        kLog("Cleaning up Pending Game State.",
             true, default.bDeepLog);
         History.CleanupPendingGameState(NewGameState);
     }
@@ -254,15 +349,7 @@ static protected function EventListenerReturn OnPlayerTurnEnded_KMP01(
         kLog("Adding NewGameState with" @ NewGameState.GetNumGameStateObjects()
             @ "modified State Objects to TacRules",
             true, default.bDeepLog);
-        // `TACTICALRULES.SubmitGameState(NewGameState);
-        if (class'X2ModConfig_KMP01'.default.Unstable)
-        {
-            History.AddGameStateToHistory(NewGameState);
-        }
-        else
-        {
-            `TACTICALRULES.SubmitGameState(NewGameState);
-        }
+        `TACTICALRULES.SubmitGameState(NewGameState);
     }
     else
     {

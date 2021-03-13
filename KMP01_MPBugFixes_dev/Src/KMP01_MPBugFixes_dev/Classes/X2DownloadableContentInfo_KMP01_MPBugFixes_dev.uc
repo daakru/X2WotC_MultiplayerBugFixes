@@ -1,9 +1,11 @@
 /*                                                                             
  * FILE:     XComDownloadableContentInfo_KMP01_MPBugFixes_dev.uc
  * AUTHOR:   Kinetos#6935, https://steamcommunity.com/id/kinetos/
- * VERSION:  KMP01 v1.3.3
+ * VERSION:  KMP01 v1.3.3+
  *
  * Specify Mod behavior on campaign creation or initial saved game load.
+ *
+ * Dependencies: X2ModConfig_KMP01.uc; X2Helpers_Logger_KMP01.uc
  *
  * Copyright (c) 2016 Firaxis Games, Inc. All rights reserved.
  */
@@ -12,8 +14,6 @@ class X2DownloadableContentInfo_KMP01_MPBugFixes_dev
     extends X2DownloadableContentInfo;
 
 var bool bDeepLog;
-
-var const config string Version;
 
 //---------------------------------------------------------------------------//
 
@@ -36,9 +36,12 @@ static event InstallNewCampaign(XComGameState StartState) {}
 /// </summary>
 static event OnPostTemplatesCreated()
 {
-    kLog("Loading MP Bug-Spray" @ (class'X2ModConfig_KMP01'.default.Unstable
-        ? "Dev" : "Stable") @ "(Version" @ default.Version $ ")",
-        true, default.bDeepLog); 
+    kLog("[Loading MP Bug-Spray]"
+        $ "\n    Version:" @ (class'X2ModConfig_KMP01'.default.Unstable
+        ? "Dev" : "Stable") @ class'X2ModConfig_KMP01'.default.Version 
+        $ "\n    Cheats: " @ (class'Engine'.static.IsConsoleAllowed() 
+        ? "Enabled" : "Disabled"));
+
     PatchSteadyHands();
 }
 
@@ -71,7 +74,7 @@ static function PatchSteadyHands()
         {
             kRed("ERROR: AbilityTemplate Not Found!", false);
             kLog("Warning: Redscreen: ERROR: AbilityTemplate Not Found!",
-                true, default.bDeepLog);
+                false, default.bDeepLog);
             continue;
         }
 
@@ -95,7 +98,7 @@ static function PatchSteadyHands()
                     @ StatChangeEffect.DuplicateResponse,
                     true, default.bDeepLog);
                 StatChangeEffect.DuplicateResponse = eDupe_Ignore;
-                StatChangeEffect.StatusIcon = StatChangeEffect.IconImage;
+                //StatChangeEffect.StatusIcon = StatChangeEffect.IconImage;
                 kLog("New Duplicate Response:"
                     @ StatChangeEffect.DuplicateResponse,
                     true, default.bDeepLog);

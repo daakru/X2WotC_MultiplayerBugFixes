@@ -3,7 +3,9 @@
  * AUTHOR:   Kinetos#6935, https://steamcommunity.com/id/kinetos/
  * VERSION:  KMP01-L v0.3.1
  *
- * Description.
+ * Adds functions to make verbose logging easier to code.
+ *
+ * Dependencies: None
  *
  * Copyright (c) 2016 Firaxis Games, Inc. All rights reserved.
  */

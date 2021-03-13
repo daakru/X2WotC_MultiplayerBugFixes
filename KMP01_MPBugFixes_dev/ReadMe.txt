@@ -1,6 +1,6 @@
 ﻿[WotC] MP Bug-Spray (WIP)
 Mod Author: Kinetos#6935
-Version: 1.3.3
+Version: 1.3.3+
 
 Developmental gameplay fixes for XCOM 2 WotC Multiplayer.
 Code is available on GitHub here: https://github.com/daakru/X2WotC_MultiplayerBugFixes.

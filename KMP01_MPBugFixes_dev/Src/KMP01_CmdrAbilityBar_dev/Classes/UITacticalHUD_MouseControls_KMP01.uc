@@ -5,6 +5,8 @@
  *
  * MCO of UITacticalHUD_MouseControls.uc to add custom commander abilities.
  *
+ * Dependencies: X2Helpers_Logger_KMP01
+ *
  * Copyright (c) 2016 Firaxis Games, Inc. All rights reserved.
  */
 
@@ -26,13 +28,13 @@ var UIButton TestButton;
 //var bool CRToggleOn;
 var protected int IconCount;
 
-var private const config int XOffset;
-var private const config int YOffset;
-var private const config float ResFactor;
-var private const config int DebugOffset;
+var private const int XOffset;
+var private const int YOffset;
+var private const float ResFactor;
+var private const int DebugOffset;
 
-var protected string ChosenCmdrPerkIcon;
-var protected string LWOfficerCmdrPerkIcon;
+var protected string imgChosenInfo;
+var protected string imgResetCamera;
 
 //---------------------------------------------------------------------------//
 
@@ -162,7 +164,7 @@ simulated function UpdateControls()
                 AbilityState.GetMyTemplate()));
         }
         */
-		if (True) //class'LWOfficerUtilities'.static.HasOfficerInSquad())
+		if (True)
 		{
 			if (OfficerIcon != none)
             {
@@ -180,7 +182,7 @@ simulated function UpdateControls()
                     ( int(Movie.UI_RES_X * ResFactor)
                     * (-(NumActiveControls + 1 + DebugOffset)) ) + XOffset,
                     YOffset,
-                    Caps(BUTTON_TOOLTIP_TEXT), LWOfficerCmdrPerkIcon,
+                    Caps(BUTTON_TOOLTIP_TEXT), imgResetCamera,
                     OnChildMouseEvent_CustomCmdr);
                 //AddCustomCommanderIcon(OfficerIcon, XOffset - 400,
                 //    YOffset, OnChildMouseEvent_CustomCmdr);
@@ -208,7 +210,7 @@ simulated function UpdateControls()
                     * (-(NumActiveControls + 2 + DebugOffset)) ) + XOffset,
                     YOffset,
                     Caps(Repl(BUTTON_TOOLTIP_CHOSEN, "%key", key, true)),
-                    ChosenCmdrPerkIcon, OnChildMouseEvent_CustomCmdr);
+                    imgChosenInfo, OnChildMouseEvent_CustomCmdr);
                 //AddCustomCommanderIcon(ChosenIcon, XOffset - 500,
                 //    YOffset, OnChildMouseEvent_CustomCmdr);
             }
@@ -231,7 +233,7 @@ simulated function UpdateControls()
             AddCustomCommanderButton(TestButton,
                 ( int(Movie.UI_RES_X * ResFactor)
                 * (-(NumActiveControls + 4 + DebugOffset)) ) + XOffset,
-                YOffset, LWOfficerCmdrPerkIcon, OnClickedTestButton);
+                YOffset, imgResetCamera, OnClickedTestButton);
         }
         */
 	}
@@ -263,7 +265,7 @@ function AddCustomCommanderIcon(
     else
     {
 	    CmdrIcon.EnableMouseAutomaticColor(
-            class'UIUtilities_Colors'.const.GOOD_HTML_COLOR,
+            class'UIUtilities_Colors'.const.FADED_HTML_COLOR,
             class'UIUtilities_Colors'.const.BLACK_HTML_COLOR);
     }
 
@@ -329,7 +331,7 @@ function OnChildMouseEvent_CustomCmdr(UIPanel ChildControl, int cmd)
             //kLog("Child Control is OfficerIcon", true, bDeepLog);
             if(cmd == class'UIUtilities_Input'.const.FXS_L_MOUSE_UP)
 		    {
-			    OnClicked_OfficerIcon();
+			    OnClicked_ResetCameraIcon();
 			    //Movie.Pres.PlayUISound(eSUISound_MenuClickNegative);
 			    //if (CRToggleOn)
 				    //PlaySound( SoundCue'SoundUI.GhostArmorOffCue',
@@ -383,17 +385,44 @@ function OnChildMouseEvent_CustomCmdr(UIPanel ChildControl, int cmd)
 
 //---------------------------------------------------------------------------//
 
-function OnClicked_OfficerIcon()
+function OnClicked_ResetCameraIcon()
 {
+    /*
     //local X2Camera Camera;
     local XComCamera GameCamera;
     local X2CameraStack CameraStack;
     local Vector NewLocation;
     local TPOV NewPOV;
     local float DeltaTime;
+    */
 
-    kLog("OnClicked_OfficerIcon",
+    kLog("OnClicked_ResetCameraIcon",
         true, bDeepLog);
+
+    switch (`SYNC_RAND(3))
+    {
+        case 0:
+            kLog("ResetCameraIcon: Running DebugClearHangs()",
+                true, bDeepLog);
+            `XCOMVISUALIZATIONMGR.DebugClearHangs();
+            break;
+        case 1:
+            kLog("ResetCameraIcon: Running ViewSelf()",
+                true, bDeepLog);
+            `CHEATMGR.ViewSelf(false);
+            break;
+        case 2:
+            kLog("ResetCameraIcon: Running DEBUGResetCameraStack()",
+                true, bDeepLog);
+            `CHEATMGR.ViewSelf(false);
+            break;
+        default:
+            kRed("ERROR:"
+                @ "Unexpected Result in OnClicked_ResetCameraIcon", false);
+            kLog("Warning: Redscreen: ERROR:"
+                @ "Unexpected Result in OnClicked_ResetCameraIcon",
+                false, bDeepLog);
+    }
     //class'WorldInfo'.static.GetWorldInfo().ConsoleCommand("exit");
     // reset the camera (based on the cursor) on the active unit
     /*
@@ -401,6 +430,8 @@ function OnClicked_OfficerIcon()
 	`Cursor.m_bCustomAllowCursorMovement = false;
 	`Cursor.m_bAllowCursorAscensionAndDescension = false;
     */
+
+    /*
     CameraStack = `CAMERASTACK;
     //Camera = CameraStack.FindCameraWithTag(
     //    X2Camera(PC.PlayerCamera).CameraTag);
@@ -429,6 +460,7 @@ function OnClicked_OfficerIcon()
         true, bDeepLog);
     class'WorldInfo'.static.GetWorldInfo().ConsoleCommand("PrintCameraStack");
     //GameCamera.ApplyCameraModifiers(DeltaTime, NewPOV);
+    */
 }
 
 //---------------------------------------------------------------------------//
@@ -462,6 +494,11 @@ defaultproperties
     bDeepLog=true
 
     IconCount=0
-    ChosenCmdrPerkIcon="img:///UILibrary_XPACK_Common.PerkIcons.UIPerk_chosendazed"
-    LWOfficerCmdrPerkIcon="img:///UILibrary_LW_OfficerPack.LWOfficers_Generic"
+    imgChosenInfo="img:///KMP01_UILibrary_PerkIcons.UIPerk_cmdr_choseninfo"
+    imgResetCamera="img:///KMP01_UILibrary_PerkIcons.UIPerk_cmdr_resetcamera"
+
+    XOffset=4
+    YOffset=4
+    ResFactor=0.0227f
+    DebugOffset=0
 }

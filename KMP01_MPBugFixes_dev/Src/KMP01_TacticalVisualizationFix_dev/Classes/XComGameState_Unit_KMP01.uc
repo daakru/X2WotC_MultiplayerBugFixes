@@ -5,6 +5,8 @@
  *
  * MCO of XComGameState_Unit.uc to debug camera pan to enemy concealed units.
  *
+ * Dependencies: X2Helpers_Logger_KMP01
+ *
  * Copyright (c) 2016 Firaxis Games, Inc. All rights reserved.
  */
 
@@ -19,14 +21,10 @@ function EnterConcealmentNewGameState(XComGameState NewGameState)
     local XComGameState_Unit NewUnitState;
     local X2TacticalGameRuleset TacticalRules;
     local X2TacticalMPGameRuleset MPRules;
-    //local XComGameStateHistory History;
-    //local XComGameState_Player LocalPlayer;
 
     TacticalRules = `TACTICALRULES;
-    //History = `XCOMHISTORY;
 
-    if (!class'X2ModConfig_KMP01'.default.Unstable
-        || !TacticalRules.IsA('X2TacticalMPGameRuleset'))
+    if (!TacticalRules.IsA('X2TacticalMPGameRuleset'))
     {
         kLog("Not an MPGame, calling super", true, default.bDeepLog);
         super.EnterConcealmentNewGameState(NewGameState);
@@ -45,20 +43,6 @@ function EnterConcealmentNewGameState(XComGameState NewGameState)
         {
             NewGameState.GetContext().PostBuildVisualizationFn
                 .AddItem(BuildVisualizationForConcealment_Entered_Individual);
-            /*
-            LocalPlayer = XComGameState_Player(History.GetGameStateForObjectID(
-                MPRules.GetLocalClientPlayerObjectID()));
-
-            // Only Visualize if Local Player's Turn is first
-            // and they haven't taken any turns yet
-            if (!MPRules.IsTurnRemote(0) && LocalPlayer.PlayerTurnCount < 1)
-            {
-                kLog("Local Player's turn is first,"
-                    @ "Visualizing Concealment!", true, default.bDeepLog);
-                NewGameState.GetContext().PostBuildVisualizationFn.AddItem(
-                    BuildVisualizationForConcealment_Entered_Individual);
-            }
-            */
         }
     }
     else

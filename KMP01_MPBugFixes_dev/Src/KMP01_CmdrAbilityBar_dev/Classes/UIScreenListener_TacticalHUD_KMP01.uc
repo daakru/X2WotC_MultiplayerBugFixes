@@ -5,6 +5,8 @@
  *
  * UISL for the UITacticalHUD to add buttons to commander abilities bar.
  *
+ * Dependencies: None
+ *
  * Copyright (c) 2016 Firaxis Games, Inc. All rights reserved.
  */
 

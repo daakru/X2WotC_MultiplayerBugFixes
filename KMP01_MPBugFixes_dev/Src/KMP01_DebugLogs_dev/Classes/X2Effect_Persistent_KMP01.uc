@@ -5,6 +5,8 @@
  *
  * MCO of X2Effect_Persistent.uc to debug effect removal conditions.
  *
+ * Dependencies: X2Helpers_Logger_KMP01
+ *
  * Copyright (c) 2016 Firaxis Games, Inc. All rights reserved.
  */
 

@@ -5,6 +5,8 @@
  *
  * MCO of XComGameState_Ability.uc to debug Deep Cover.
  *
+ * Dependencies: X2Helpers_Logger_KMP01
+ *
  * Copyright (c) 2016 Firaxis Games, Inc. All rights reserved.
  */
 

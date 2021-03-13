@@ -5,6 +5,8 @@
  *
  * MCO of UIMPShell_SquadCostPanel.uc to hide Squad Loadout Name from opponent.
  *
+ * Dependencies: None
+ *
  * Copyright (c) 2016 Firaxis Games, Inc. All rights reserved.
  */
 

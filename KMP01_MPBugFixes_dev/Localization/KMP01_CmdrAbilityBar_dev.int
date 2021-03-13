@@ -1,0 +1,3 @@
+[UITacticalHUD_MouseControls_KMP01]
+BUTTON_TOOLTIP_TEXT=Log Camera Debug Info
+BUTTON_TOOLTIP_CHOSEN=Chosen Info: [%key]
