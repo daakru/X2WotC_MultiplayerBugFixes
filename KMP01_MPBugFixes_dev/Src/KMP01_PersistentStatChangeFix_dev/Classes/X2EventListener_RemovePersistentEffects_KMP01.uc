@@ -4,6 +4,7 @@
  * VERSION:  KMP01
  *
  * Register Event Listeners to Remove Persistent Effects that aren't ticking.
+ * NOTE: Seems to only activate on the active player's machine
  *
  * Dependencies: X2ModConfig_KMP01; X2Helpers_Logger_KMP01
  *
@@ -96,19 +97,6 @@ static function X2EventListenerTemplate CreatePlayerTurnEndedTemplate()
 
 //---------------------------------------------------------------------------//
 
-private static function array<name> Generate_PTE_ForceRemoveEffects()
-{
-    local array<name> EffectList;
-
-    EffectList.AddItem('SteadyHandsStatBoost');
-    EffectList.AddItem('HunkerDown');
-    //EffectList.AddItem('');
-
-    return EffectList;
-}
-
-//---------------------------------------------------------------------------//
-
 /// <summary>
 /// Called on triggering a 'UnitGroupTurnBegun' or 'UnitGroupTurnEnded' Event
 /// </summary>
@@ -135,7 +123,10 @@ static protected function EventListenerReturn OnUnitGroupTurnEvent_KMP01(
     History = `XCOMHISTORY;
     GroupState = XComGameState_AIGroup(EventData);
 
-    kLog("Turn" @ (EventID == 'UnitGroupTurnBegun' ? "Begun" : "Ended") @ "for Group on team:" @ GroupState.TeamName @ "with Initiative Priority:" @ GroupState.InitiativePriority, true, default.bDeepLog);
+    kLog("Turn" @ (EventID == 'UnitGroupTurnBegun' ? "Begun" : "Ended")
+        @ "for Group on team:" @ GroupState.TeamName
+        @ "with Initiative Priority:" @ GroupState.InitiativePriority,
+        true, default.bDeepLog);
 
     NewGameState = class'XComGameStateContext_ChangeContainer'.static
         .CreateChangeState("OnUnitGrouTurnEvent_KMP01: Remove Effects");
@@ -143,7 +134,8 @@ static protected function EventListenerReturn OnUnitGroupTurnEvent_KMP01(
     if (!GroupState.GetLivingMembers(LivingMemberIDs, LivingMembers))
     {
         // No Units in this Unit Group
-        kLog("No Units found in Group: Exiting ELR_NoInterrupt", true, default.bDeepLog);
+        kLog("No Units found in Group: Exiting ELR_NoInterrupt",
+            true, default.bDeepLog);
         return ELR_NoInterrupt;
     }
 
@@ -170,7 +162,8 @@ static protected function EventListenerReturn OnUnitGroupTurnEvent_KMP01(
 
         if (CtrlPlayer.ObjectID > 0)
         {
-            bUnitStateModified = ModifyUnitState(NewGameState, UnitState, EventID);
+            bUnitStateModified = class'X2Helpers_PersistentStatChangeFix_KMP01'
+                .static.ModifyUnitState(NewGameState, UnitState, EventID);
             kLog("Unit with Template Name '" $ UnitState.GetMyTemplateName()
                 $ "', ID '" $ UnitState.ObjectID
                 $ "', and Name:" @ UnitState.GetMPName(eNameType_FullNick)
@@ -250,16 +243,13 @@ static protected function EventListenerReturn OnPlayerTurnEvent_KMP01(
         // Check if this Unit belongs to the Player whose turn is ending
         if (UnitState.ControllingPlayer.ObjectID == PlayerState.ObjectID)
         {
-            bUnitStateModified = ModifyUnitState(NewGameState, UnitState, EventID);
+            bUnitStateModified = class'X2Helpers_PersistentStatChangeFix_KMP01'
+                .static.ModifyUnitState(NewGameState, UnitState, EventID);
             kLog("Unit with Template Name '" $ UnitState.GetMyTemplateName()
                 $ "', ID '" $ UnitState.ObjectID
                 $ "', and Name:" @ UnitState.GetMPName(eNameType_FullNick)
                 $ ": bUnitStateModified =" @ bUnitStateModified,
                 true, default.bDeepLog);
-        }
-        else
-        {
-            // TODO: Handle Units controlled by another Player
         }
     }
 
@@ -277,212 +267,6 @@ static protected function EventListenerReturn OnPlayerTurnEvent_KMP01(
         History.CleanupPendingGameState(NewGameState);
     }
     return ELR_NoInterrupt;
-}
-
-//---------------------------------------------------------------------------//
-
-/// <summary>
-/// Called when 'PlayerTurnEndedListenerTemplate_KMP01' is triggered by a 'PlayerTurnEnded' Event
-/// </summary>
-/// <param name="EventData">    XComGameState_Player of the Player whose turn is ending </param>
-/// <param name="EventSource">  XComGameState_Player of the Player whose turn is ending </param>
-/// <param name="NewGameState"> New XComGameState built from the GameRule Context </param>
-static protected function EventListenerReturn OnPlayerTurnEnded_KMP01(
-    Object EventData,
-    Object EventSource,
-    XComGameState EventGameState,
-    Name EventID,  // 'PlayerTurnEnded'
-    Object CallbackData)  // None
-{
-    local XComGameState_Player PlayerState;
-    local XComGameState_Unit UnitState;
-    local XComGameStateHistory History;
-    local XComGameState NewGameState;
-    local bool bUnitStateModified;
-    
-    History = `XCOMHISTORY;
-    PlayerState = XComGameState_Player(EventData);
-
-    kLog("Turn" @ PlayerState.PlayerTurnCount @ "Ending for Player:" @ PlayerState.ObjectID @ PlayerState.PlayerName @ PlayerState.TeamFlag, true, default.bDeepLog);
-
-    NewGameState = class'XComGameStateContext_ChangeContainer'.static
-        .CreateChangeState("OnPlayerTurnEnded_KMP01: Remove Effects");
-
-    foreach History.IterateByClassType(class'XComGameState_Unit', UnitState)
-    {
-        // Skip removed (evac'ed), non-selectable (mimic beacon),
-        //   cosmectic (gremlin), dead, and playerless (MOCX!) Units
-        if (UnitState == none || UnitState.bRemovedFromPlay
-            || UnitState.ControllingPlayer.ObjectID <= 0
-            || UnitState.GetMyTemplate().bNeverSelectable
-            || UnitState.GetMyTemplate().bIsCosmetic
-            || !UnitState.IsAlive())
-        {
-            continue;
-        }
-
-        kLog("Now Checking Unit:" @ UnitState.GetMPName(eNameType_FullNick)
-            $ "\n    Ending Player:     " @ PlayerState.ObjectID
-                @ PlayerState.PlayerName @ PlayerState.TeamFlag
-            $ "\n    Controlling Player:"
-                @ UnitState.ControllingPlayer.ObjectID,
-            true, default.bDeepLog);
-
-        // Check if this Unit belongs to the Player whose turn is ending
-        if (UnitState.ControllingPlayer.ObjectID == PlayerState.ObjectID)
-        {
-            bUnitStateModified = ModifyUnitState(NewGameState, UnitState, EventID);
-            kLog("Unit with Template Name '" $ UnitState.GetMyTemplateName()
-                $ "', ID '" $ UnitState.ObjectID
-                $ "', and Name:" @ UnitState.GetMPName(eNameType_FullNick)
-                $ ": bUnitStateModified =" @ bUnitStateModified,
-                true, default.bDeepLog);
-        }
-        else
-        {
-            // TODO: Handle Units controlled by another Player
-        }
-    }
-
-    if (NewGameState.GetNumGameStateObjects() > 0)
-    {
-        kLog("Adding NewGameState with" @ NewGameState.GetNumGameStateObjects()
-            @ "modified State Objects to TacRules",
-            true, default.bDeepLog);
-        `TACTICALRULES.SubmitGameState(NewGameState);
-    }
-    else
-    {
-        kLog("Cleaning up Pending Game State.",
-            true, default.bDeepLog);
-        History.CleanupPendingGameState(NewGameState);
-    }
-    return ELR_NoInterrupt;
-}
-
-//---------------------------------------------------------------------------//
-
-static final function bool ModifyUnitState(XComGameState NewGameState,
-                                           XComGameState_Unit UnitState,
-                                           optional name TriggeredEventID)
-{
-    local array<name> PTE_ForceRemoveEffects;
-    local XComGameState_Effect EffectState;
-    local name EffectName;
-    local bool bModified;
-
-    local X2Effect_PersistentStatChange PStatEffect;
-    local X2Effect_Persistent PEffect;
-
-    PTE_ForceRemoveEffects = Generate_PTE_ForceRemoveEffects();
-
-    foreach UnitState.AffectedByEffectNames(EffectName)
-    {
-        if (PTE_ForceRemoveEffects.Find(EffectName) == INDEX_NONE)  //(EffectName != 'SteadyHandsStatBoost')
-        {
-            kLog("Not interested in effect with name: '" $ EffectName $ "'",
-                true, default.bDeepLog);
-            continue;
-        }
-        EffectState = UnitState.GetUnitAffectedByEffectState(EffectName);
-        PEffect = EffectState.GetX2Effect();
-        if (!PEffect.IsA('X2Effect_PersistentStatChange'))
-        {
-            kRed("ERROR: Something Went Wrong!", false);
-            kLog("Warning: Redscreen: ERROR: Something Went Wrong!",
-                true, default.bDeepLog);
-            continue;
-        }
-
-        kLog("Logging EffectState of '" $ EffectName $ "':"
-            $ "\n    iTurnsRemaining:                   " @ EffectState.iTurnsRemaining
-            $ "\n    FullTurnsTicked:                   " @ EffectState.FullTurnsTicked
-            $ "\n    StatChanges.Length:                " @ EffectState.StatChanges.Length
-            $ "\n    ObjectID:                          " @ EffectState.ObjectID,
-            true, default.bDeepLog);
-
-        PStatEffect = X2Effect_PersistentStatChange(PEffect);
-
-        kLog("Logging Template of '" $ EffectName $ "':"
-            $ "\n    iNumTurns:                         " @ PStatEffect.iNumTurns
-            $ "\n    bInfiniteDuration:                 " @ PStatEffect.bInfiniteDuration
-            $ "\n    bIgnorePlayerCheckOnTick:          " @ PStatEffect.bIgnorePlayerCheckOnTick
-            $ "\n    DuplicateResponse:                 " @ PStatEffect.DuplicateResponse
-            $ "\n    ApplyOnTick.Length:                " @ PStatEffect.ApplyOnTick.Length
-            $ "\n    WatchRule:                         " @ PStatEffect.WatchRule
-            $ "\n    FriendlyName:                      " @ PStatEffect.FriendlyName
-            $ "\n    FriendlyDescription:               " @ PStatEffect.FriendlyDescription,
-            true, default.bDeepLog);
-
-        // Universal Features
-        switch (TriggeredEventID)
-        {
-            case 'PlayerTurnBegun':
-                break;
-            case 'UnitGroupTurnBegun':
-                if (EffectName == 'HunkerDown')
-                {
-                    kLog("UnitGroupTurnBegun: Removing Effect:" @ EffectName, true, default.bDeepLog);
-                    EffectState = XComGameState_Effect(NewGameState
-                        .ModifyStateObject(EffectState.Class, EffectState.ObjectID));
-            
-                    EffectState.RemoveEffect(NewGameState, NewGameState);
-                    bModified = true;
-                }
-                break;
-            case 'PlayerTurnEnded':
-                break;
-            case 'UnitGroupTurnEnded':
-                if (EffectName == 'SteadyHandsStatBoost')
-                {
-                    kLog("UnitGroupTurnEnded: Removing Effect:" @ EffectName, true, default.bDeepLog);
-                    EffectState = XComGameState_Effect(NewGameState
-                        .ModifyStateObject(EffectState.Class, EffectState.ObjectID));
-            
-                    EffectState.RemoveEffect(NewGameState, NewGameState);
-                    bModified = true;
-                }
-                break;
-            default:
-                break;
-        }
-
-        // Enable Stable Only Features
-        if (!class'X2ModConfig_KMP01'.default.Unstable)
-        {
-            switch (TriggeredEventID)
-            {
-                case 'PlayerTurnBegun':
-                    break;
-                case 'UnitGroupTurnBegun':
-                    break;
-                case 'PlayerTurnEnded':
-                    break;
-                case 'UnitGroupTurnEnded':
-                    break;
-                default:
-                    break;
-            }
-        }
-        // Enable Developmental Only Features
-        else
-        {
-            switch (TriggeredEventID)
-            {
-                case 'PlayerTurnBegun':
-                    break;
-                case 'UnitGroupTurnBegun':
-                    break;
-                case 'PlayerTurnEnded':
-                    break;
-                case 'UnitGroupTurnEnded':
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
-    return bModified;
 }
 
 //---------------------------------------------------------------------------//
