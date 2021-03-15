@@ -79,7 +79,13 @@ tags=War of the Chosen, UI, Gameplay, Multiplayer, MP, bugfix, why firaxis why, 
     <Content Include="Src\KMP01_MPBugFixes_dev\Classes\UIScreenListener_UIFinalShell_KMP01.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\KMP01_MPBugFixes_dev\Classes\X2Ability_ScanBeGone_KMP01.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\KMP01_MPBugFixes_dev\Classes\X2DownloadableContentInfo_KMP01_MPBugFixes_dev.uc" />
+    <Content Include="Src\KMP01_MPBugFixes_dev\Classes\X2Effect_ScanBeGone_KMP01.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\KMP01_PersistentStatChangeFix_dev\Classes\X2Helpers_PersistentStatChangeFix_KMP01.uc">
       <SubType>Content</SubType>
     </Content>
@@ -98,7 +104,13 @@ tags=War of the Chosen, UI, Gameplay, Multiplayer, MP, bugfix, why firaxis why, 
     <Content Include="Src\KMP01_Utilities_dev\Classes\X2Helpers_Logger_KMP01.uc">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="Src\KMP01_Utilities_dev\Classes\X2Helpers_Utility_KMP01.uc">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Src\KMP01_Utilities_dev\Classes\X2ModConfig_KMP01.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\KMP01_Utilities_dev\Classes\XComGameState_SingletonTracker_KMP01.uc">
       <SubType>Content</SubType>
     </Content>
   </ItemGroup>

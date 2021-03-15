@@ -43,6 +43,68 @@ static event OnPostTemplatesCreated()
         ? "Enabled" : "Disabled"));
 
     PatchSteadyHands();
+    if (class'X2ModConfig_KMP01'.default.Unstable)
+    {
+        AddScanBeGoneAbility();
+    }
+}
+
+//---------------------------------------------------------------------------//
+
+/// <summary>
+/// Called just before the player launches into a tactical mission
+/// Allows mods to modify the start state before launching into the mission
+/// </summary>
+static event OnPreMission(XComGameState StartGameState,
+	XComGameState_MissionSite MissionState)
+{
+    kLog("OnPreMission", true, default.bDeepLog);
+	class'XComGameState_SingletonTracker_KMP01'
+		.static.InitializeTracker(StartGameState);
+}
+
+//---------------------------------------------------------------------------//
+
+/// <summary>
+/// Patch Steady Hands' Persistent Stat Change Effect to Ignore duplicates
+/// </summary>
+static function AddScanBeGoneAbility()
+{
+    local array<X2DataTemplate>             DifficultyVariants;
+    local X2DataTemplate                    DifficultyVariant;
+    local X2AbilityTemplate                 AbilityTemplate;
+    local X2AbilityTemplateManager          AbilityMgr;
+
+    AbilityMgr = class'X2AbilityTemplateManager'
+        .static.GetAbilityTemplateManager();
+
+    AbilityMgr.FindDataTemplateAllDifficulties(
+        'StandardMove', DifficultyVariants);
+
+    foreach DifficultyVariants(DifficultyVariant)
+    {
+        AbilityTemplate = X2AbilityTemplate(DifficultyVariant);
+
+        if (AbilityTemplate == none)
+        {
+            kRed("ERROR: AbilityTemplate Not Found!", false);
+            kLog("Warning: Redscreen: ERROR: AbilityTemplate Not Found!",
+                false, default.bDeepLog);
+            continue;
+        }
+
+        if (AbilityTemplate.AdditionalAbilities
+            .Find('ScanBeGone_Ability_KMP01') != INDEX_NONE)
+        {
+            kRed("ERROR: ScanBeGone Already Exists!", false);
+            kLog("Warning: Redscreen: ERROR: ScanBeGone Already Exists!",
+                false, default.bDeepLog);
+            continue;
+        }
+
+        AbilityTemplate.AdditionalAbilities
+            .AddItem('ScanBeGone_Ability_KMP01');
+    }
 }
 
 //---------------------------------------------------------------------------//
@@ -107,6 +169,52 @@ static function PatchSteadyHands()
             break;
         }
     }
+}
+
+//---------------------------------------------------------------------------//
+
+/// Use to Test Tactical Singleton Tracker
+exec function CheckTacticalTracker()
+{
+	local XComGameState_SingletonTracker_KMP01 STracker;
+
+	STracker = class'XComGameState_SingletonTracker_KMP01'
+		.static.GetSingleTracker();
+	if (STracker == none)
+	{
+		class'Helpers'.static.OutputMsg("No Tactical Tracker Found.\n");
+		return;
+	}
+	class'Helpers'.static.OutputMsg("Tactical Tracker Found."
+		@ "bEventHasRunBefore =" @ STracker.bEventHasRunBefore $ "\n");
+}
+
+//---------------------------------------------------------------------------//
+
+/// Use to Test Tactical Singleton Tracker
+exec function SetTacticalTrackerBool(bool NewValue)
+{
+	local XComGameState_SingletonTracker_KMP01 STracker;
+	local XComGameState NewGameState;
+
+	STracker = class'XComGameState_SingletonTracker_KMP01'
+		.static.GetSingleTracker();
+	if (STracker == none)
+	{
+		class'Helpers'.static.OutputMsg("No Tactical Tracker Found.\n");
+	}
+
+	NewGameState = class'XComGameStateContext_ChangeContainer'.static
+		.CreateChangeState();
+	STracker = XComGameState_SingletonTracker_KMP01(NewGameState
+		.ModifyStateObject(class'XComGameState_SingletonTracker_KMP01',
+		STracker.ObjectID));
+
+	STracker.bEventHasRunBefore = NewValue;
+
+	`XCOMHISTORY.AddGameStateToHistory(NewGameState);
+	class'Helpers'.static.OutputMsg("Tactical Tracker Found."
+		@ "bEventHasRunBefore set to " @ NewValue $ "\n");
 }
 
 //---------------------------------------------------------------------------//

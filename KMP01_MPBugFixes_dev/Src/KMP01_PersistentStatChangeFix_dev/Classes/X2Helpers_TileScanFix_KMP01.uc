@@ -15,12 +15,12 @@ static function ToggleAllHiddenUnitTileBlocked(XComGameState NewGameState, bool 
 {
     local XComGameState_Unit UnitState;
     local XComGameStateHistory History;
-    local X2TacticalGameRuleset Rules;
+    //local X2TacticalGameRuleset Rules;
     local XComGameState_Player LocalPlayer;
-    local XGUnit Unit;
+    //local XGUnit Unit;
 
     History = `XCOMHISTORY;
-    Rules = `TACTICALRULES;
+    //Rules = `TACTICALRULES;
 
     LocalPlayer = XComGameState_Player(History.GetGameStateForObjectID(`TACTICALRULES.GetLocalClientPlayerObjectID()));
 
@@ -37,7 +37,7 @@ static function ToggleAllHiddenUnitTileBlocked(XComGameState NewGameState, bool 
             continue;
         }
         
-        Unit = XGUnit(UnitState.GetVisualizer());
+        //Unit = XGUnit(UnitState.GetVisualizer());
 
         // Skip if we own this unit or already have visibility on it
         if (UnitState.ControllingPlayer.ObjectID == LocalPlayer.ObjectID)

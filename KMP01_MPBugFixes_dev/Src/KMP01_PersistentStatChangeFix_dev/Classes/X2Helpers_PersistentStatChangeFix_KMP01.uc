@@ -29,6 +29,50 @@ private static function array<name> Generate_PTE_ForceRemoveEffects()
 
 //---------------------------------------------------------------------------//
 
+/// <summary>
+/// Called on triggering a 'PlayerTurnBegun' or 'PlayerTurnEnded' Event
+/// </summary>
+/// <param name="EventData">    XComGameState_Player that triggered the event </param>
+/// <param name="EventSource">  XComGameState_Player that triggered the event </param>
+/// <param name="NewGameState"> New XComGameState built from the GameRule Context </param>
+static final function bool HandlePlayerTurnEvent(XComGameState NewGameState,
+    XComGameState_Player PlayerState, Name EventID)
+{
+    local XComGameStateHistory History;
+    local XComGameState_Unit UnitState;
+    local bool bUnitStateModified;
+    
+    History = `XCOMHISTORY;
+
+    foreach History.IterateByClassType(class'XComGameState_Unit', UnitState)
+    {
+        kLog("Now Checking Unit:" @ UnitState.GetMPName(eNameType_FullNick)
+            $ "\n    Ending Player:     " @ PlayerState.ObjectID
+                @ PlayerState.PlayerName @ PlayerState.TeamFlag
+            $ "\n    Controlling Player:"
+                @ UnitState.ControllingPlayer.ObjectID,
+            true, default.bDeepLog);
+
+        // Skip if Unit is not valid or does not belong to the Turn Player
+        if (!class'X2Helpers_Utility_KMP01'.static.IsUnitValid(UnitState)
+            || UnitState.ControllingPlayer.ObjectID != PlayerState.ObjectID)
+        {
+            continue;
+        }
+
+        bUnitStateModified = ModifyUnitState(NewGameState, UnitState, EventID);
+        kLog("Unit with Template Name '" $ UnitState.GetMyTemplateName()
+            $ "', ID '" $ UnitState.ObjectID
+            $ "', and Name:" @ UnitState.GetMPName(eNameType_FullNick)
+            $ ": bUnitStateModified =" @ bUnitStateModified,
+            true, default.bDeepLog);
+    }
+
+    return bUnitStateModified;
+}
+
+//---------------------------------------------------------------------------//
+
 static final function bool ModifyUnitState(XComGameState NewGameState,
                                            XComGameState_Unit UnitState,
                                            optional name TriggeredEventID)

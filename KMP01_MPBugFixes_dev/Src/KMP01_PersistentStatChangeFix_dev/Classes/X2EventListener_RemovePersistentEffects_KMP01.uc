@@ -129,7 +129,7 @@ static protected function EventListenerReturn OnUnitGroupTurnEvent_KMP01(
         true, default.bDeepLog);
 
     NewGameState = class'XComGameStateContext_ChangeContainer'.static
-        .CreateChangeState("OnUnitGrouTurnEvent_KMP01: Remove Effects");
+        .CreateChangeState("OnUnitGroupTurnEvent_KMP01");
 
     if (!GroupState.GetLivingMembers(LivingMemberIDs, LivingMembers))
     {
@@ -204,10 +204,9 @@ static protected function EventListenerReturn OnPlayerTurnEvent_KMP01(
     Object CallbackData)  // None
 {
     local XComGameState_Player PlayerState;
-    local XComGameState_Unit UnitState;
     local XComGameStateHistory History;
     local XComGameState NewGameState;
-    local bool bUnitStateModified;
+    //local bool bStateModified;
     
     History = `XCOMHISTORY;
     PlayerState = XComGameState_Player(EventData);
@@ -218,40 +217,15 @@ static protected function EventListenerReturn OnPlayerTurnEvent_KMP01(
         true, default.bDeepLog);
 
     NewGameState = class'XComGameStateContext_ChangeContainer'.static
-        .CreateChangeState("OnPlayerTurnEnded_KMP01: Remove Effects");
+        .CreateChangeState("OnPlayerTurnEvent_KMP01");
 
-    foreach History.IterateByClassType(class'XComGameState_Unit', UnitState)
-    {
-        // Skip removed (evac'ed), non-selectable (mimic beacon),
-        //   cosmectic (gremlin), dead, and playerless (MOCX!) Units
-        if (UnitState == none || UnitState.bRemovedFromPlay
-            || UnitState.ControllingPlayer.ObjectID <= 0
-            || UnitState.GetMyTemplate().bNeverSelectable
-            || UnitState.GetMyTemplate().bIsCosmetic
-            || !UnitState.IsAlive())
-        {
-            continue;
-        }
+    // HANDLE MODIFICATIONS TO GAME STATE
 
-        kLog("Now Checking Unit:" @ UnitState.GetMPName(eNameType_FullNick)
-            $ "\n    Ending Player:     " @ PlayerState.ObjectID
-                @ PlayerState.PlayerName @ PlayerState.TeamFlag
-            $ "\n    Controlling Player:"
-                @ UnitState.ControllingPlayer.ObjectID,
-            true, default.bDeepLog);
+    // NOTE: Moved Fix for Deep Cover and Steady Hands to UnitGroup Events
+    //bStateModified = class'X2Helpers_PersistentStatChangeFix_KMP01'
+    //    .static.HandlePlayerTurnEvent(NewGameState, PlayerState, EventID);
 
-        // Check if this Unit belongs to the Player whose turn is ending
-        if (UnitState.ControllingPlayer.ObjectID == PlayerState.ObjectID)
-        {
-            bUnitStateModified = class'X2Helpers_PersistentStatChangeFix_KMP01'
-                .static.ModifyUnitState(NewGameState, UnitState, EventID);
-            kLog("Unit with Template Name '" $ UnitState.GetMyTemplateName()
-                $ "', ID '" $ UnitState.ObjectID
-                $ "', and Name:" @ UnitState.GetMPName(eNameType_FullNick)
-                $ ": bUnitStateModified =" @ bUnitStateModified,
-                true, default.bDeepLog);
-        }
-    }
+    // END HANDLE MODIFICATIONS TO GAME STATE
 
     if (NewGameState.GetNumGameStateObjects() > 0)
     {
