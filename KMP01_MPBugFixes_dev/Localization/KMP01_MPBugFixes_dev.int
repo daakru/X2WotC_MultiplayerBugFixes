@@ -4,3 +4,6 @@ strMessage_Title = "[WotC] MP Bug-Spray (WIP)"
 strMessage_Header = "WARNING: Experimental Mode is Active!"
 strMessage_Body = "The Unstable mode of <font color='#53B45E'>[WOTC] MP Bug-Spray (WIP)</font> is enabled in XComGame.ini"
 strDismiss_Button = "OK"
+
+[X2Effect_ScanBeGone_KMP01]
+strMovementBlockedByTileBump = "Target Tile is Blocked!"

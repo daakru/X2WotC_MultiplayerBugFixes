@@ -12,9 +12,13 @@
 
 class X2Effect_ScanBeGone_KMP01 extends X2Effect_Persistent;
 
+var localized string strMovementBlockedByTileBump;
+
 var bool bDeepLog;
 
 var private const float fValueInterrupt;
+var private const string imgTileBump;
+var private const float TypicalMoveDelay;
 
 //var const private int COLLISION_MIN_TILE_DISTANCE;
 //var const private int COLLISION_MAX_TILE_DISTANCE;
@@ -42,33 +46,23 @@ function RegisterForEvents(XComGameState_Effect EffectGameState)
         EffectUnit, ,
         EffectUnit
     );
-
+    /*
     `XEVENTMGR.RegisterForEvent(
         EffectObject,
         'AbilityActivated',
         TileBumpListener_Cleanup_KMP01,
         ELD_OnVisualizationBlockStarted, ,
         EffectUnit, ,
+    );
+    */
+    `XEVENTMGR.RegisterForEvent(
+        EffectObject,
+        'AbilityActivated',
+        TileBumpListener_Cleanup_KMP01,
+        ELD_OnVisualizationBlockCompleted, ,
+        EffectUnit, ,
         EffectUnit
     );
-    /*
-    `XEVENTMGR.RegisterForEvent(
-        EffectObject,
-        'Visualizer_Interrupt',
-        TileBumpListener_Cleanup_KMP01,
-        ELD_OnStateSubmitted, ,
-        , ,
-        EffectUnit);
-    
-    `XEVENTMGR.RegisterForEvent(
-        EffectObject,
-        'ObjectMoved',
-        TileBumpListener_Immediate_KMP01,
-        ELD_Immediate,
-        4, , ,
-        EffectUnit);
-    */
-
     super.RegisterForEvents(EffectGameState);
 }
 
@@ -82,6 +76,7 @@ static function EventListenerReturn TileBumpListener_Interrupt_KMP01(
     Object CallbackData)
 {
     local XComGameStateContext_Ability AbilityContext;
+    //local XComGameState_Ability AbilityState;
     local XComGameState_Player PlayerState;
     local XComGameState_Player BlockPlayer;
     local XComGameState_Unit UnitState;
@@ -127,45 +122,27 @@ static function EventListenerReturn TileBumpListener_Interrupt_KMP01(
     Blocker = XComGameState_Unit(`XCOMHISTORY.GetGameStateForObjectID(XGUnit(TileActors[0]).ObjectID));
     if (Blocker != none)
     {
-        BlockPlayer = XComGameState_Player(`XCOMHISTORY.GetGameStateForObjectID(Blocker.ControllingPlayer.ObjectID));
+        // bad
+    }
 
-        kLog("Unit:    " @ UnitState.GetName(eNameType_FullNick)
-            $ "\n    Player:  " @ PlayerState.ObjectID
-                                @ PlayerState.PlayerName
-                                @ PlayerState.TeamFlag
-            $ "\n    Location:" @ "x:" @ UnitState.TileLocation.X 
-                                @ "y:" @ UnitState.TileLocation.Y
-                                @ "z:" @ UnitState.TileLocation.Z
-            $ "\n    Target:  " @ "x:" @ TargetLoc.X
-                                @ "y:" @ TargetLoc.Y
-                                @ "z:" @ TargetLoc.Z
-            $ "\n    Blocker: " @ Blocker.GetName(eNameType_FullNick)
-            $ "\n    Player:  " @ BlockPlayer.ObjectID
-                                @ BlockPlayer.PlayerName
-                                @ BlockPlayer.TeamFlag,
-            true, default.bDeepLog);
-    }
-    else
-    {
-        kLog("Unit:    " @ UnitState.GetName(eNameType_FullNick)
-            $ "\n    Player:  " @ PlayerState.ObjectID
-                                @ PlayerState.PlayerName
-                                @ PlayerState.TeamFlag
-            $ "\n    Location:" @ "x:" @ UnitState.TileLocation.X 
-                                @ "y:" @ UnitState.TileLocation.Y
-                                @ "z:" @ UnitState.TileLocation.Z
-            $ "\n    Target:  " @ "x:" @ TargetLoc.X
-                                @ "y:" @ TargetLoc.Y
-                                @ "z:" @ TargetLoc.Z,
-            true, default.bDeepLog);
-    }
-    /*
-    if (EventGameState.HistoryIndex > -1)
-    {
-        kLog("Exit: Game State exists in History", true, default.bDeepLog);
-        return ELR_NoInterrupt;
-    }
-    */
+    BlockPlayer = XComGameState_Player(`XCOMHISTORY.GetGameStateForObjectID(Blocker.ControllingPlayer.ObjectID));
+
+    kLog("Unit:    " @ UnitState.GetName(eNameType_FullNick)
+        $ "\n    Player:  " @ PlayerState.ObjectID
+                            @ PlayerState.PlayerName
+                            @ PlayerState.TeamFlag
+        $ "\n    Location:" @ "x:" @ UnitState.TileLocation.X 
+                            @ "y:" @ UnitState.TileLocation.Y
+                            @ "z:" @ UnitState.TileLocation.Z
+        $ "\n    Target:  " @ "x:" @ TargetLoc.X
+                            @ "y:" @ TargetLoc.Y
+                            @ "z:" @ TargetLoc.Z
+        $ "\n    Blocker: " @ Blocker.GetName(eNameType_FullNick)
+        $ "\n    Player:  " @ BlockPlayer.ObjectID
+                            @ BlockPlayer.PlayerName
+                            @ BlockPlayer.TeamFlag,
+        true, default.bDeepLog);
+
     NewGameState = class'XComGameStateContext_ChangeContainer'.static
         .CreateChangeState("TileBumpListener_Interrupt_KMP01");
     UnitState = XComGameState_Unit(NewGameState
@@ -187,6 +164,23 @@ static function EventListenerReturn TileBumpListener_Interrupt_KMP01(
         UnitState.SetUnitFloatValue(class'X2Ability_DefaultAbilitySet'
             .default.ImmobilizedValueName, default.fValueInterrupt);
     }
+    //UnitState.SetUnitFloatValue(default.EffectName, 1, eCleanup_BeginTurn);
+
+    kLog("bVisOrderIdp:" @ AbilityContext.bVisualizationOrderIndependent
+        $ "\n    DesVisBlock: " @ AbilityContext.DesiredVisualizationBlockIndex
+        //$ "\n    bVisFence:   " @ AbilityContext.bVisualizationFence
+        //$ "\n    VisFenceTime:" @ AbilityContext.VisualizationFenceTimeout
+        $ "\n    PreBuildVis: " @ AbilityContext.PreBuildVisualizationFn.Length
+        $ "\n    PostVisBuild:" @ AbilityContext.PostBuildVisualizationFn.Length,
+        true, default.bDeepLog);
+
+    //AbilityContext.bVisualizationOrderIndependent = false;
+    //AbilityContext.DesiredVisualizationBlockIndex = `XCOMHISTORY.GetCurrentHistoryIndex() + 10;
+    //AbilityContext.bVisualizationFence = true;
+    //AbilityContext.PreBuildVisualizationFn.Length = 0;
+    AbilityContext.PreBuildVisualizationFn.AddItem(TileBump_PreBuildVisualization);
+    //AbilityContext.PostBuildVisualizationFn.Length = 0;
+    //AbilityContext.PostBuildVisualizationFn.AddItem(TileBump_PostBuildVisualization);
 
     if (NewGameState.GetNumGameStateObjects() > 0)
     {
@@ -204,6 +198,11 @@ static function EventListenerReturn TileBumpListener_Interrupt_KMP01(
     return ELR_NoInterrupt;
 }
 
+//---------------------------------------------------------------------------//
+
+/// <summary>
+/// Open the tome of Black Magic and prepare to release the seal
+/// </summary>
 static function EventListenerReturn TileBumpListener_Cleanup_KMP01(
     Object EventData, 
     Object EventSource,
@@ -211,33 +210,45 @@ static function EventListenerReturn TileBumpListener_Cleanup_KMP01(
     name EventID,
     Object CallbackData)
 {
+    local delegate<X2AbilityTemplate.BuildVisualizationDelegate> PreBuildVis;
+    local XComGameStateContext_Ability AbilityContext;
+    local XComGameState_Unit UnitState;
+    local XComGameState NewGameState;
+    local UnitValue UVal;
 
-    if (EventID == 'AbilityActivated')
+    kLog("AbilityActivated Event for Visualization:", true, default.bDeepLog);
+    
+    AbilityContext = XComGameStateContext_Ability(EventGameState.GetContext());
+    UnitState = XComGameState_Unit(EventSource);
+
+    kLog("PreBuildVisFn.Length:" @ AbilityContext.PreBuildVisualizationFn.Length, true, default.bDeepLog);
+    
+    if (AbilityContext.PreBuildVisualizationFn.Find(TileBump_PreBuildVisualization) == INDEX_NONE)
     {
-        kLog("AbilityActivated Event for Visualization:" @ XComGameStateContext_Ability(EventGameState.GetContext()).InterruptionStatus, true, default.bDeepLog);
+        kLog("Exit: No PreBuildVisFn Found for Unit"
+            @ UnitState.GetName(eNameType_FullNick),
+            true, default.bDeepLog);
         return ELR_NoInterrupt;
     }
+    kLog("PreBuildVisFn Found!", true, default.bDeepLog);
 
-    if (XComGameStateContext_Ability(EventData).InterruptionStatus != eInterruptionStatus_Interrupt)
-    {
-        kLog("Cleanup Phase:", true, default.bDeepLog);
-        return TileBumpCleanup(XComGameState_Unit(CallbackData));
-    }
-    else
-    {
-        kLog("Interrupt Phase:", true, default.bDeepLog);
-        return TileBumpCleanup(XComGameState_Unit(CallbackData));
-    }
+    TileBump_PostBuildVisualization(EventGameState);
+
     return ELR_NoInterrupt;
 }
 
+//---------------------------------------------------------------------------//
+
+/// <summary>
+/// Activate Black Magic to remove the Immobilized UnitValue added on Interrupt
+/// </summary>
 static private function EventListenerReturn TileBumpCleanup(XComGameState_Unit UnitState)
 {
     local XComGameState NewGameState;
     local UnitValue UVal;
     
     if (!UnitState.GetUnitValue(class'X2Ability_DefaultAbilitySet'
-            .default.ImmobilizedValueName, UVal))
+        .default.ImmobilizedValueName, UVal))
     {
         kLog("Exit: No Immobilize UnitValue Found for Unit"
             @ UnitState.GetName(eNameType_FullNick),
@@ -252,20 +263,21 @@ static private function EventListenerReturn TileBumpCleanup(XComGameState_Unit U
         return ELR_NoInterrupt;
     }
 
+    kLog("Begin Casting Black Magic:", true, default.bDeepLog);
     NewGameState = class'XComGameStateContext_ChangeContainer'.static
         .CreateChangeState("TileBumpCleanup");
     UnitState = XComGameState_Unit(NewGameState
         .ModifyStateObject(UnitState.Class, UnitState.ObjectID));
 
     kLog("Remove Immobilize UnitValue",
-            true, default.bDeepLog);
+        true, default.bDeepLog);
     UnitState.ClearUnitValue(class'X2Ability_DefaultAbilitySet'
         .default.ImmobilizedValueName);
-
+    
     if (NewGameState.GetNumGameStateObjects() > 0)
     {
         kLog("Adding NewGameState with" @ NewGameState.GetNumGameStateObjects()
-            @ "modified State Objects to TacRules",
+            @ "modified State Objects to TacRules through use of Black Magic",
             true, default.bDeepLog);
         `TACTICALRULES.SubmitGameState(NewGameState);
     }
@@ -275,7 +287,79 @@ static private function EventListenerReturn TileBumpCleanup(XComGameState_Unit U
             true, default.bDeepLog);
         `XCOMHISTORY.CleanupPendingGameState(NewGameState);
     }
+    kLog("Seal the Black Magic back within the void", true, default.bDeepLog);
+
     return ELR_NoInterrupt;
+}
+
+simulated function TileBump_PreBuildVisualization(XComGameState VisualizeGameState)
+{
+	local XComGameStateHistory              History;
+    local VisualizationActionMetadata       ActionMetadata;
+    local X2Action_PlaySoundAndFlyOver      SoundAction;
+	local XComGameStateContext_Ability      AbilityContext;
+	//local X2Action_CameraLookAt             LookAtAction;
+	local int                               ObjectID;
+
+	AbilityContext = XComGameStateContext_Ability(VisualizeGameState.GetContext());
+    ObjectID = AbilityContext.InputContext.SourceObject.ObjectID;
+
+	History = `XCOMHISTORY;
+	
+	History.GetCurrentAndPreviousGameStatesForObjectID(ObjectID, ActionMetadata.StateObject_OldState, ActionMetadata.StateObject_NewState, eReturnType_Reference, VisualizeGameState.HistoryIndex);
+	ActionMetadata.VisualizeActor = History.GetVisualizer(ObjectID);
+	// Just merge it directly into the build tree root -- the whole context will be inserted correctly
+	ActionMetadata.LastActionAdded = `XCOMVISUALIZATIONMGR.BuildVisTree;
+
+	SoundAction = X2Action_PlaySoundAndFlyOver(class'X2Action_PlaySoundAndFlyOver'.static.AddToVisualizationTree(ActionMetadata, VisualizeGameState.GetContext()));
+	SoundAction.SetSoundAndFlyOverParameters(SoundCue'SoundGlobalUI.MenuClickNegative_Cue'/*AkEvent'SoundX2StrategyUI.ToDoWidget_Red'*/, default.strMovementBlockedByTileBump, /*CharacterSpeech*/'', eColor_Bad, imgTileBump, /*LookAtDuration*/, /*BlockUntilFinished*/, /*VisibleTeam*/, /*MessageBehavior*/);  // SoundCue(`CONTENT.RequestGameArchetype("KAndromedonGU.Sound.OhYeah"))
+    // SoundUI.NegativeSelection2Cue
+    TileBumpCleanup(XComGameState_Unit(History.GetGameStateForObjectID(ObjectID)));
+}
+
+static function TileBump_PostBuildVisualization(XComGameState VisualizeGameState)
+{
+    local XComGameStateContext_Ability AbilityContext;
+    local XComGameState_Unit UnitState;
+    local XComGameState NewGameState;
+    local TTile StartLocation;
+
+	AbilityContext = XComGameStateContext_Ability(VisualizeGameState.GetContext());
+
+    StartLocation = AbilityContext.InputContext.MovementPaths[0].MovementTiles[0];
+
+    kLog("Begin Casting Black Magic:", true, default.bDeepLog);
+
+    //NewGameState = class'XComGameStateContext_ChangeContainer'.static
+    //    .CreateChangeState("TileBumpCleanup");
+
+    //UnitState = XComGameState_Unit(NewGameState.ModifyStateObject(
+    //    class'XComGameState_Unit', AbilityContext.InputContext.SourceObject.ObjectID));
+    UnitState = XComGameState_Unit(VisualizeGameState.GetGameStateForObjectID(
+        AbilityContext.InputContext.SourceObject.ObjectID));
+
+    // Correct Unit Location
+    `CHEATMGR.TeleportUnit(XGUnit(UnitState.GetVisualizer()), `XWORLD.GetPositionFromTileCoordinates(StartLocation));
+
+    kLog("Moving Back to Start Location: x:" @ StartLocation.X
+        @ "y:" @ StartLocation.Y @ "z:" @ StartLocation.Z,
+        true, default.bDeepLog); 
+    /*
+    if (NewGameState.GetNumGameStateObjects() > 0)
+    {
+        kLog("Adding NewGameState with" @ NewGameState.GetNumGameStateObjects()
+            @ "modified State Objects to TacRules through use of Black Magic",
+            true, default.bDeepLog);
+        `TACTICALRULES.SubmitGameState(NewGameState);
+    }
+    else
+    {
+        kLog("Cleaning up Pending Game State",
+            true, default.bDeepLog);
+        `XCOMHISTORY.CleanupPendingGameState(NewGameState);
+    }
+    */
+    kLog("Seal the Black Magic back within the void", true, default.bDeepLog);
 }
 
 //---------------------------------------------------------------------------//
@@ -339,72 +423,6 @@ static function EventListenerReturn PostTileBumpListener_KMP01(
 */
 //---------------------------------------------------------------------------//
 /*
-static function EventListenerReturn TileBumpListener_KMP01(
-    Object EventData, 
-    Object EventSource,
-    XComGameState EventGameState,
-    name EventID,
-    Object CallbackData)
-{
-    local XComGameState_Unit ELUnit;
-    local XComGameState_Unit MovingUnit;
-    local XComGameState NewGameState;
-    local array<Actor> TileActors;
-
-    local XComGameState_Player MovingPlayer;
-    local XComGameState_Player ListenerPlayer;
-
-    MovingUnit = XComGameState_Unit(EventSource);  // Moving Unit
-    ELUnit = XComGameState_Unit(CallbackData);  // Listener Unit
-
-    ListenerPlayer = XComGameState_Player(`XCOMHISTORY.GetGameStateForObjectID(ELUnit.ControllingPlayer.ObjectID));
-    MovingPlayer = XComGameState_Player(`XCOMHISTORY.GetGameStateForObjectID(MovingUnit.ControllingPlayer.ObjectID));
-
-    kLog("Listener Unit:" @ ELUnit.GetName(eNameType_FullNick)
-        $ "\n    Listener Player:" @ ListenerPlayer.ObjectID
-            @ ListenerPlayer.PlayerName @ ListenerPlayer.TeamFlag
-        $ "\n    Moving Unit:" @ MovingUnit.GetName(eNameType_FullNick)
-        $ "\n    Moving Player:" @ MovingPlayer.ObjectID
-            @ MovingPlayer.PlayerName @ MovingPlayer.TeamFlag,
-        true, default.bDeepLog);
-
-    if (ELUnit == MovingUnit)
-    {
-        kLog("Exit: Units are the same" , true, default.bDeepLog);
-        return ELR_NoInterrupt;
-    }
-    
-    TileActors = `XWORLD.GetActorsOnTile(ELUnit.TileLocation);
-
-    if (TileActors.Length <= 1)
-    {
-        kLog("Exit: Less than two units on tile" , true, default.bDeepLog);
-        return ELR_NoInterrupt;
-    }
-
-    NewGameState = class'XComGameStateContext_ChangeContainer'.static
-        .CreateChangeState("TileBumpListener_KMP01");
-
-    HandleTileBump(ELUnit, NewGameState);
-
-    if (NewGameState.GetNumGameStateObjects() > 0)
-    {
-        kLog("Adding NewGameState with" @ NewGameState.GetNumGameStateObjects()
-            @ "modified State Objects to TacRules",
-            true, default.bDeepLog);
-        `TACTICALRULES.SubmitGameState(NewGameState);
-    }
-    else
-    {
-        kLog("Cleaning up Pending Game State",
-            true, default.bDeepLog);
-        `XCOMHISTORY.CleanupPendingGameState(NewGameState);
-    }
-    return ELR_NoInterrupt;
-}
-*/
-//---------------------------------------------------------------------------//
-/*
 private static function HandleTileBump(XComGameState_Unit Unit,
                                        XComGameState NewGameState)
 {
@@ -444,161 +462,6 @@ private static function HandleTileBump(XComGameState_Unit Unit,
 	Unit.SetVisibilityLocation(NewTileLocation);
 }
 */
-//---------------------------------------------------------------------------//
-/*
-static function EventListenerReturn TileBumpListener_Immediate_KMP01(
-    Object EventData, 
-    Object EventSource,
-    XComGameState EventGameState,
-    name EventID,
-    Object CallbackData)
-{
-    local XComGameState_Unit ELUnit;
-    local XComGameState_Unit MovingUnit;
-    local array<Actor> TileActors;
-    local TTile MV_Location;
-    local TTile EL_Location;
-
-    local XComGameState_Player MovingPlayer;
-    local XComGameState_Player ListenerPlayer;
-
-    local XComGameStateContext_Ability AbilityContext;
-    local array<PathingInputData> MovePaths;
-    local PathingInputData PathData;
-    local array<TTile> MoveTiles;
-    local TTile MTile;
-    local string Msg;
-    local int idx;
-
-    MovingUnit = XComGameState_Unit(EventSource);  // Moving Unit
-    ELUnit = XComGameState_Unit(CallbackData);  // Listener Unit
-
-    ListenerPlayer = XComGameState_Player(`XCOMHISTORY.GetGameStateForObjectID(ELUnit.ControllingPlayer.ObjectID));
-    MovingPlayer = XComGameState_Player(`XCOMHISTORY.GetGameStateForObjectID(MovingUnit.ControllingPlayer.ObjectID));
-
-    if (ELUnit == MovingUnit)
-    {
-        kLog("Exit: Units are the same" , true, default.bDeepLog);
-        return ELR_NoInterrupt;
-    }
-    if (ELUnit.ControllingPlayer == MovingUnit.ControllingPlayer)
-    {
-        kLog("Exit: Units are controlled by the same Player" , true, default.bDeepLog);
-        return ELR_NoInterrupt;
-    }
-
-    //// This doesn't work here because the event hasn't been processed yet
-    //TileActors = `XWORLD.GetActorsOnTile(ELUnit.TileLocation);
-    //
-    //if (TileActors.Length <= 1)
-    //{
-    //    kLog("Exit: Less than two units on tile" , true, default.bDeepLog);
-    //    return ELR_NoInterrupt;
-    //}
-
-    //MovingUnit.GetKeystoneVisibilityLocation(MV_Location);
-    //ELUnit.GetKeystoneVisibilityLocation(EL_Location);
-    //if (MV_Location != EL_Location)
-    //{
-    //    kLog("Exit: Units will not collide"
-    //        $ "\n    MV_Location: x:" @ MV_Location.X @ "y:" @ MV_Location.Y @ "z:" @ MV_Location.Z
-    //        $ "\n    EL_Location: x:" @ EL_Location.X @ "y:" @ EL_Location.Y @ "z:" @ EL_Location.Z,
-    //        true, default.bDeepLog);
-    //    return ELR_NoInterrupt;
-    //}
-
-    AbilityContext = XComGameStateContext_Ability(EventGameState.GetContext());
-
-    if (AbilityContext.InterruptionStatus != eInterruptionStatus_Interrupt)
-    {
-        return ELR_NoInterrupt;
-    }
-    kLog("INTERRUPT PHASE!!!" , true, default.bDeepLog);
-
-    MovePaths = AbilityContext.InputContext.MovementPaths;
-    Msg = "";
-    foreach MovePaths(PathData, idx)
-    {
-        Msg $= "\n    MovePath[" $ idx $ "]:";
-        MoveTiles = PathData.MovementTiles;
-        foreach MoveTiles(MTile, idx)
-        {
-            Msg $= "\n        MTile[" $ idx $ "]: x:" @ MTile.X @ "y:" @ MTile.Y @ "z:" @ MTile.Z;
-        }
-    }
-    kLog(Msg, true, default.bDeepLog);
-
-    if (MTile != ELUnit.TileLocation)
-    {
-        kLog("Exit: Units will not collide"
-            $ "\n    MVUnit.TileLocation: x:" @ MTile.X @ "y:" @ MTile.Y @ "z:" @ MTile.Z
-            //$ "\n    MVUnit.TileLocation: x:" @ MovingUnit.TileLocation.X @ "y:" @ MovingUnit.TileLocation.Y @ "z:" @ MovingUnit.TileLocation.Z
-            $ "\n    ELUnit.TileLocation: x:" @ ELUnit.TileLocation.X @ "y:" @ ELUnit.TileLocation.Y @ "z:" @ ELUnit.TileLocation.Z,
-            true, default.bDeepLog);
-        return ELR_NoInterrupt;
-    }
-
-    kLog("Listener Unit:" @ ELUnit.GetName(eNameType_FullNick)
-        @ "; Location: x:" @ ELUnit.TileLocation.X @ "y:" @ ELUnit.TileLocation.Y @ "z:" @ ELUnit.TileLocation.Z
-        $ "\n    Listener Player:" @ ListenerPlayer.ObjectID
-            @ ListenerPlayer.PlayerName @ ListenerPlayer.TeamFlag
-        $ "\n    Moving Unit:" @ MovingUnit.GetName(eNameType_FullNick)
-        @ "; Location: x:" @ MovingUnit.TileLocation.X @ "y:" @ MovingUnit.TileLocation.Y @ "z:" @ MovingUnit.TileLocation.Z
-        $ "\n    Moving Player:" @ MovingPlayer.ObjectID
-            @ MovingPlayer.PlayerName @ MovingPlayer.TeamFlag,
-        true, default.bDeepLog);
-
-    // PURGEEEEEEEE
-    ThisIsProbablyUnstableAsFrick(EventGameState);
-
-    //return ELR_InterruptEventAndListeners;
-    //return ELR_InterruptEvent;
-    //return ELR_InterruptListeners;
-    return ELR_NoInterrupt;
-}
-*/
-//---------------------------------------------------------------------------//
-
-// Cancel the movement action pepega
-private static function ThisIsProbablyUnstableAsFrick(out XComGameState NewGameState)
-{
-    local XComGameState_BaseObject TargetObject;
-    local int NumObjects;
-    //local int idx;
-    
-    NumObjects = NewGameState.GetNumGameStateObjects();
-
-    kLog("NumObjects:" @ NumObjects, true, default.bDeepLog);
-
-    if (NewGameState.HistoryIndex > -1)
-    {
-        kLog("MONKAS: Game State exists in History", true, default.bDeepLog);
-    }
-
-    // PURGE THE MOVEMENT BWAHAHAHA
-    
-    while (NumObjects > 0)
-    {
-        TargetObject = NewGameState.DebugGetGameStateForObjectIndex(NumObjects - 1);
-        NewGameState.PurgeGameStateForObjectID(TargetObject.ObjectID);
-        NumObjects = NewGameState.GetNumGameStateObjects();
-        kLog("NumObjects:" @ NumObjects, true, default.bDeepLog);
-    }
-    
-    /*for (idx = NumObjects - 1; idx >= 0 ; idx--)
-    {
-        TargetObject = NewGameState.DebugGetGameStateForObjectIndex(idx);
-        NewGameState.RemoveStateObject(TargetObject.ObjectID);
-        kLog("NumObjects:" @ NewGameState.GetNumGameStateObjects(), true, default.bDeepLog);
-    }
-    if (NumObjects == 1)
-    {
-        TargetObject = NewGameState.DebugGetGameStateForObjectIndex(0);
-        NewGameState.RemoveStateObject(TargetObject.ObjectID);
-        kLog("NumObjects:" @ NewGameState.GetNumGameStateObjects(), true, default.bDeepLog);
-    }*/
-}
-
 //---------------------------------------------------------------------------//
 
 function EGameplayBlocking ModifyGameplayPathBlockingForTarget(
@@ -657,4 +520,7 @@ defaultproperties
     EffectRank=1 // This rank is set for blocking
     EffectName="ScanBeGone_Effect_KMP01"
     fValueInterrupt=2391060667
+
+    imgTileBump="img:///KMP01_UILibrary_PerkIcons.UIPerk_cmdr_choseninfo"
+    TypicalMoveDelay=0.5f
 }
