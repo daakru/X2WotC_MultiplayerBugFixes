@@ -1,4 +1,20 @@
+/*                                                                             
+ * FILE:     X2Ability_ScanBeGone_KMP01.uc
+ * AUTHOR:   Kinetos#6935, https://steamcommunity.com/id/kinetos/
+ * VERSION:  KMP01
+ *
+ * Prevent Units that are not visible to the enemy from being tilescanned.
+ *
+ * Dependencies: X2Effect_ScanBeGone_KMP01.uc
+ *
+ * Copyright (c) 2016 Firaxis Games, Inc. All rights reserved.
+ */
+
 class X2Ability_ScanBeGone_KMP01 extends X2Ability;
+
+var const name UV_ForceLadderBlock;
+
+//---------------------------------------------------------------------------//
 
 static function array<X2DataTemplate> CreateTemplates()
 {
@@ -9,6 +25,7 @@ static function array<X2DataTemplate> CreateTemplates()
 	return Templates;
 }
 
+//---------------------------------------------------------------------------//
 
 static function X2AbilityTemplate AddScanBeGoneAbility()
 {
@@ -19,6 +36,7 @@ static function X2AbilityTemplate AddScanBeGoneAbility()
     return Template;
 }
 
+//---------------------------------------------------------------------------//
 
 static function X2AbilityTemplate PersistentPurePassive(name TemplateName,
     optional string TemplateIconImage="img:///UILibrary_PerkIcons.UIPerk_standard",
@@ -51,4 +69,11 @@ static function X2AbilityTemplate PersistentPurePassive(name TemplateName,
     Template.bCrossClassEligible = bCrossClassEligible;
 
     return Template;
+}
+
+//---------------------------------------------------------------------------//
+
+defaultproperties
+{
+    UV_ForceLadderBlock="KMP01_ShouldBlockLadderWhileConcealed_UnitValue"
 }

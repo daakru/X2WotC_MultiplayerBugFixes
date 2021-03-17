@@ -89,9 +89,6 @@ tags=War of the Chosen, UI, Gameplay, Multiplayer, MP, bugfix, why firaxis why, 
     <Content Include="Src\KMP01_PersistentStatChangeFix_dev\Classes\X2Helpers_PersistentStatChangeFix_KMP01.uc">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Src\KMP01_PersistentStatChangeFix_dev\Classes\X2Helpers_TileScanFix_KMP01.uc">
-      <SubType>Content</SubType>
-    </Content>
     <Content Include="Src\KMP01_TacticalVisualizationFix_dev\Classes\XComGameState_Unit_KMP01.uc">
       <SubType>Content</SubType>
     </Content>
@@ -108,9 +105,6 @@ tags=War of the Chosen, UI, Gameplay, Multiplayer, MP, bugfix, why firaxis why, 
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\KMP01_Utilities_dev\Classes\X2ModConfig_KMP01.uc">
-      <SubType>Content</SubType>
-    </Content>
-    <Content Include="Src\KMP01_Utilities_dev\Classes\XComGameState_SingletonTracker_KMP01.uc">
       <SubType>Content</SubType>
     </Content>
   </ItemGroup>

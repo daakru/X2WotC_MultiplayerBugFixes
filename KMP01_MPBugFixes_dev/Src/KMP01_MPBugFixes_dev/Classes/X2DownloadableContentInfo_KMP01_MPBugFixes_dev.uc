@@ -52,20 +52,6 @@ static event OnPostTemplatesCreated()
 //---------------------------------------------------------------------------//
 
 /// <summary>
-/// Called just before the player launches into a tactical mission
-/// Allows mods to modify the start state before launching into the mission
-/// </summary>
-static event OnPreMission(XComGameState StartGameState,
-	XComGameState_MissionSite MissionState)
-{
-    kLog("OnPreMission", true, default.bDeepLog);
-	class'XComGameState_SingletonTracker_KMP01'
-		.static.InitializeTracker(StartGameState);
-}
-
-//---------------------------------------------------------------------------//
-
-/// <summary>
 /// Patch Steady Hands' Persistent Stat Change Effect to Ignore duplicates
 /// </summary>
 static function AddScanBeGoneAbility()
@@ -169,52 +155,6 @@ static function PatchSteadyHands()
             break;
         }
     }
-}
-
-//---------------------------------------------------------------------------//
-
-/// Use to Test Tactical Singleton Tracker
-exec function CheckTacticalTracker()
-{
-	local XComGameState_SingletonTracker_KMP01 STracker;
-
-	STracker = class'XComGameState_SingletonTracker_KMP01'
-		.static.GetSingleTracker();
-	if (STracker == none)
-	{
-		class'Helpers'.static.OutputMsg("No Tactical Tracker Found.\n");
-		return;
-	}
-	class'Helpers'.static.OutputMsg("Tactical Tracker Found."
-		@ "bEventHasRunBefore =" @ STracker.bEventHasRunBefore $ "\n");
-}
-
-//---------------------------------------------------------------------------//
-
-/// Use to Test Tactical Singleton Tracker
-exec function SetTacticalTrackerBool(bool NewValue)
-{
-	local XComGameState_SingletonTracker_KMP01 STracker;
-	local XComGameState NewGameState;
-
-	STracker = class'XComGameState_SingletonTracker_KMP01'
-		.static.GetSingleTracker();
-	if (STracker == none)
-	{
-		class'Helpers'.static.OutputMsg("No Tactical Tracker Found.\n");
-	}
-
-	NewGameState = class'XComGameStateContext_ChangeContainer'.static
-		.CreateChangeState();
-	STracker = XComGameState_SingletonTracker_KMP01(NewGameState
-		.ModifyStateObject(class'XComGameState_SingletonTracker_KMP01',
-		STracker.ObjectID));
-
-	STracker.bEventHasRunBefore = NewValue;
-
-	`XCOMHISTORY.AddGameStateToHistory(NewGameState);
-	class'Helpers'.static.OutputMsg("Tactical Tracker Found."
-		@ "bEventHasRunBefore set to " @ NewValue $ "\n");
 }
 
 //---------------------------------------------------------------------------//
