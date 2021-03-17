@@ -340,7 +340,7 @@ function EGameplayBlocking ModifyGameplayPathBlockingForTarget(
     Unit = XGUnit(UnitState.GetVisualizer());
 
 	// This unit blocks the target unit if they are on the same team
-    // (not an enemy), are visible to the enemy, or target unit is a civilian
+    // (not an enemy), are visible to the enemy, or target unit is a civilian,
     // or they are at the top of a ladder and not concealed.
 	if(!UnitState.IsEnemyUnit(TargetUnit)
         || Unit.IsVisibleToTeam(LocalPlayer.TeamFlag)
@@ -361,30 +361,29 @@ private function bool IsAtopLadder(XGUnit Unit)
 {
     local WorldInfo WorldInfo;
     local XComWorldData World;
-    local XComLadder Ladder;
-    local Vector lTop;
-    //local Vector lBot;
     local TTile LadderTopTile;
-    //local TTile LadderBotTile;
+    local XComLadder Ladder;
     local TTile UnitTile;
+    local Vector lTop;
 
     WorldInfo = `XWORLDINFO; //class'WorldInfo'.static.GetWorldInfo();
     World = `XWORLD;
 
-    foreach WorldInfo.OverlappingActors(class'XComLadder', Ladder, 144.0f, Unit.Location, false)
+    foreach WorldInfo.OverlappingActors(class'XComLadder',
+        Ladder, 144.0f, Unit.Location, false)
     {
         lTop = Ladder.GetTop();
-        //lBot = Ladder.GetBottom();
         LadderTopTile = World.GetTileCoordinatesFromPosition(lTop);
-        //LadderBotTile = World.GetTileCoordinatesFromPosition(lBot);
         UnitTile = World.GetTileCoordinatesFromPosition(Unit.Location);
-        kLog("Unit Location:  " @ Unit.Location.X @ Unit.Location.Y @ Unit.Location.Z
-            $ "\n    Unit Tile:      " @ UnitTile.X @ UnitTile.Y @ UnitTile.Z
-            //$ "\n    Ladder Top:     " @ lTop.X @ lTop.Y @ lTop.Z
-            $ "\n    Ladder Top Tile:" @ LadderTopTile.X @ LadderTopTile.Y @ LadderTopTile.Z,
-            //$ "\n    Ladder Bottom:  " @ lBot.X @ lBot.Y @ lBot.Z
-            //$ "\n    Ladder Bot Tile:" @ LadderBotTile.X @ LadderBotTile.Y @ LadderBotTile.Z
-            //$ "\n    Unit On Top:    " @ LadderTopTile == UnitTile,
+        kLog("Unit Location:  " @ Unit.Location.X
+                                @ Unit.Location.Y
+                                @ Unit.Location.Z
+            $ "\n    Unit Tile:      " @ UnitTile.X
+                                       @ UnitTile.Y
+                                       @ UnitTile.Z
+            $ "\n    Ladder Top Tile:" @ LadderTopTile.X
+                                       @ LadderTopTile.Y
+                                       @ LadderTopTile.Z,
             true, default.bDeepLog);
         if (UnitTile.X == LadderTopTile.X
             && UnitTile.Y == LadderTopTile.Y

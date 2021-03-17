@@ -1,7 +1,7 @@
 /*                                                                             
  * FILE:     XComDownloadableContentInfo_KMP01_MPBugFixes_dev.uc
  * AUTHOR:   Kinetos#6935, https://steamcommunity.com/id/kinetos/
- * VERSION:  KMP01 v1.3.3+
+ * VERSION:  KMP01 v1.3.4
  *
  * Specify Mod behavior on campaign creation or initial saved game load.
  *

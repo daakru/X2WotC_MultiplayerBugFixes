@@ -31,7 +31,8 @@ static function X2AbilityTemplate AddScanBeGoneAbility()
 {
     local X2AbilityTemplate Template;
 
-    Template = PersistentPurePassive('ScanBeGone_Ability_KMP01', , , 'eAbilitySource_Perk', false);
+    Template = PersistentPurePassive('ScanBeGone_Ability_KMP01', , ,
+        'eAbilitySource_Perk', false);
 
     return Template;
 }
@@ -39,7 +40,7 @@ static function X2AbilityTemplate AddScanBeGoneAbility()
 //---------------------------------------------------------------------------//
 
 static function X2AbilityTemplate PersistentPurePassive(name TemplateName,
-    optional string TemplateIconImage="img:///UILibrary_PerkIcons.UIPerk_standard",
+    string TemplateIconImage="img:///UILibrary_PerkIcons.UIPerk_standard",
     optional bool bCrossClassEligible=false,
     optional Name AbilitySourceName='eAbilitySource_Perk',
     optional bool bDisplayInUI=true)
