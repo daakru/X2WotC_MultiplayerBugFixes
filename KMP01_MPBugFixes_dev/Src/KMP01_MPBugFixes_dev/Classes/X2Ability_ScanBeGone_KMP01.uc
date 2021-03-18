@@ -47,9 +47,6 @@ static function X2AbilityTemplate AddScanBeGoneAbility()
     local X2Effect_ScanBeGone_KMP01 PersistentEffect;
     local X2AbilityTemplate Template;
 
-    //Template = PersistentPurePassive('ScanBeGone_Ability_KMP01', , ,
-    //    'eAbilitySource_Perk', false);
-
     `CREATE_X2ABILITY_TEMPLATE(Template, default.AbilityName);
 
     Template.AbilitySourceName = default.AbilitySource;
@@ -84,41 +81,6 @@ static function X2AbilityTemplate AddScanBeGoneAbility()
     return Template;
 }
 
-//---------------------------------------------------------------------------//
-/*
-static function X2AbilityTemplate PersistentPurePassive(name TemplateName,
-    string TemplateIconImage="img:///UILibrary_PerkIcons.UIPerk_standard",
-    bool bCrossClassEligible=false,
-    name AbilitySourceName='eAbilitySource_Perk',
-    bool bDisplayInUI=false)
-{
-    local X2AbilityTemplate Template;
-    local X2Effect_ScanBeGone_KMP01 Effect;
-
-    `CREATE_X2ABILITY_TEMPLATE(Template, TemplateName);
-
-    Template.IconImage = TemplateIconImage;
-    Template.AbilitySourceName = AbilitySourceName;
-    Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_NeverShow;
-    Template.Hostility = eHostility_Neutral;
-    Template.bIsPassive = true;
-
-    Template.AbilityToHitCalc = default.DeadEye;
-    Template.AbilityTargetStyle = default.SelfTarget;
-    Template.AbilityTriggers.AddItem(default.UnitPostBeginPlayTrigger);
-
-    // Build the Persistent Effect
-    Effect = new class'X2Effect_ScanBeGone_KMP01';
-    Effect.BuildPersistentEffect(1, true, false);
-    Template.AddTargetEffect(Effect);
-
-    Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
-
-    Template.bCrossClassEligible = bCrossClassEligible;
-
-    return Template;
-}
-*/
 //---------------------------------------------------------------------------//
 
 defaultproperties
