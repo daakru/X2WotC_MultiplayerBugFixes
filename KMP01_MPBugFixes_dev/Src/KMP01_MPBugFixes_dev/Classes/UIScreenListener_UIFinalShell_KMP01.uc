@@ -165,7 +165,7 @@ final function OnVersionBGMouseEvent(UIPanel Panel, int cmd)
     switch (cmd)
     {
         case class'UIUtilities_Input'.const.FXS_L_MOUSE_UP:
-            OnVersionPanelClicked(bg);
+            //OnVersionPanelClicked(bg);
             break;
         case class'UIUtilities_Input'.const.FXS_L_MOUSE_IN:
         case class'UIUtilities_Input'.const.FXS_L_MOUSE_DRAG_OVER:

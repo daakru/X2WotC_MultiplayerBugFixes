@@ -171,7 +171,8 @@ static function EventListenerReturn TileBumpListener_Interrupt_KMP01(
     //AbilityContext.PreBuildVisualizationFn.Length = 0;
     //AbilityContext.PostBuildVisualizationFn.Length = 0;
     AbilityContext.PreBuildVisualizationFn
-        .AddItem(TileBump_PreBuildVisualization);
+        .AddItem(class'X2Effect_ScanBeGone_KMP01'
+        .static.TileBump_PreBuildVisualization);
 
     if (NewGameState.GetNumGameStateObjects() > 0)
     {
@@ -238,7 +239,7 @@ static function EventListenerReturn TileBumpListener_Cleanup_KMP01(
 /// <summary>
 /// Open the tome of Black Magic and prepare to release the seal
 /// </summary>
-simulated function TileBump_PreBuildVisualization(
+static function TileBump_PreBuildVisualization(
     XComGameState VisualizeGameState)
 {
 	local XComGameStateContext_Ability AbilityContext;
