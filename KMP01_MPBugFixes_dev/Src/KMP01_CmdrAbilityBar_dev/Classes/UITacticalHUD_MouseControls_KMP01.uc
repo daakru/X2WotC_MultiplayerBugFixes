@@ -265,7 +265,7 @@ function AddCustomCommanderIcon(
     else
     {
 	    CmdrIcon.EnableMouseAutomaticColor(
-            class'UIUtilities_Colors'.const.FADED_HTML_COLOR,
+            class'UIUtilities_Colors'.const.NORMAL_HTML_COLOR,
             class'UIUtilities_Colors'.const.BLACK_HTML_COLOR);
     }
 

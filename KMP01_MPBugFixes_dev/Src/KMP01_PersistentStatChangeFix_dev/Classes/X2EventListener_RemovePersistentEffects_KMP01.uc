@@ -14,6 +14,8 @@
 class X2EventListener_RemovePersistentEffects_KMP01 extends X2EventListener;
 
 var bool bDeepLog;
+var bool bPathLog;
+var bool bSubLog;
 
 //---------------------------------------------------------------------------//
 
@@ -126,7 +128,7 @@ static protected function EventListenerReturn OnUnitGroupTurnEvent_KMP01(
     kLog("Turn" @ (EventID == 'UnitGroupTurnBegun' ? "Begun" : "Ended")
         @ "for Group on team:" @ GroupState.TeamName
         @ "with Initiative Priority:" @ GroupState.InitiativePriority,
-        true, default.bDeepLog);
+        true, default.bPathLog);
 
     NewGameState = class'XComGameStateContext_ChangeContainer'.static
         .CreateChangeState("OnUnitGroupTurnEvent_KMP01");
@@ -135,7 +137,7 @@ static protected function EventListenerReturn OnUnitGroupTurnEvent_KMP01(
     {
         // No Units in this Unit Group
         kLog("No Units found in Group: Exiting ELR_NoInterrupt",
-            true, default.bDeepLog);
+            true, default.bSubLog);
         return ELR_NoInterrupt;
     }
 
@@ -158,7 +160,7 @@ static protected function EventListenerReturn OnUnitGroupTurnEvent_KMP01(
         kLog("Now Checking Unit:" @ UnitState.GetMPName(eNameType_FullNick)
             $ "\n    Controlling Player:" @ CtrlPlayer.ObjectID
                 @ CtrlPlayer.PlayerName @ CtrlPlayer.TeamFlag,
-            true, default.bDeepLog);
+            true, default.bSubLog);
 
         if (CtrlPlayer.ObjectID > 0)
         {
@@ -168,7 +170,7 @@ static protected function EventListenerReturn OnUnitGroupTurnEvent_KMP01(
                 $ "', ID '" $ UnitState.ObjectID
                 $ "', and Name:" @ UnitState.GetMPName(eNameType_FullNick)
                 $ ": bUnitStateModified =" @ bUnitStateModified,
-                true, default.bDeepLog);
+                true, default.bSubLog);
         }
     }
 
@@ -176,13 +178,13 @@ static protected function EventListenerReturn OnUnitGroupTurnEvent_KMP01(
     {
         kLog("Adding NewGameState with" @ NewGameState.GetNumGameStateObjects()
             @ "modified State Objects to TacRules",
-            true, default.bDeepLog);
+            true, default.bSubLog);
         `TACTICALRULES.SubmitGameState(NewGameState);
     }
     else
     {
         kLog("Cleaning up Pending Game State",
-            true, default.bDeepLog);
+            true, default.bSubLog);
         History.CleanupPendingGameState(NewGameState);
     }
     return ELR_NoInterrupt;
@@ -214,7 +216,7 @@ static protected function EventListenerReturn OnPlayerTurnEvent_KMP01(
     kLog("Turn" @ PlayerState.PlayerTurnCount @ (EventID == 'PlayerTurnBegun'
         ? "Begun" : "Ended") @ "for Player:" @ PlayerState.ObjectID
         @ PlayerState.PlayerName @ PlayerState.TeamFlag,
-        true, default.bDeepLog);
+        true, default.bPathLog);
 
     NewGameState = class'XComGameStateContext_ChangeContainer'.static
         .CreateChangeState("OnPlayerTurnEvent_KMP01");
@@ -231,13 +233,13 @@ static protected function EventListenerReturn OnPlayerTurnEvent_KMP01(
     {
         kLog("Adding NewGameState with" @ NewGameState.GetNumGameStateObjects()
             @ "modified State Objects to TacRules",
-            true, default.bDeepLog);
+            true, default.bSubLog);
         `TACTICALRULES.SubmitGameState(NewGameState);
     }
     else
     {
         kLog("Cleaning up Pending Game State.",
-            true, default.bDeepLog);
+            true, default.bSubLog);
         History.CleanupPendingGameState(NewGameState);
     }
     return ELR_NoInterrupt;
@@ -261,5 +263,7 @@ private static function kRed(string Msg, bool bBypassRed=true)
 
 defaultproperties
 {
-    bDeepLog=true
+    bDeepLog=false
+    bPathLog=true
+    bSubLog=false
 }

@@ -13,6 +13,8 @@
 class X2Helpers_PersistentStatChangeFix_KMP01 extends Object abstract;
 
 var bool bDeepLog;
+var bool bPathLog;
+var bool bSubLog;
 
 //---------------------------------------------------------------------------//
 
@@ -44,6 +46,8 @@ static final function bool HandlePlayerTurnEvent(XComGameState NewGameState,
     
     History = `XCOMHISTORY;
 
+    kLog("HandlePlayerTurnEvent:", true, default.bPathLog);
+
     foreach History.IterateByClassType(class'XComGameState_Unit', UnitState)
     {
         kLog("Now Checking Unit:" @ UnitState.GetMPName(eNameType_FullNick)
@@ -51,7 +55,7 @@ static final function bool HandlePlayerTurnEvent(XComGameState NewGameState,
                 @ PlayerState.PlayerName @ PlayerState.TeamFlag
             $ "\n    Controlling Player:"
                 @ UnitState.ControllingPlayer.ObjectID,
-            true, default.bDeepLog);
+            true, default.bSubLog);
 
         // Skip if Unit is not valid or does not belong to the Turn Player
         if (!class'X2Helpers_Utility_KMP01'.static.IsUnitValid(UnitState)
@@ -65,7 +69,7 @@ static final function bool HandlePlayerTurnEvent(XComGameState NewGameState,
             $ "', ID '" $ UnitState.ObjectID
             $ "', and Name:" @ UnitState.GetMPName(eNameType_FullNick)
             $ ": bUnitStateModified =" @ bUnitStateModified,
-            true, default.bDeepLog);
+            true, default.bSubLog);
     }
 
     return bUnitStateModified;
@@ -85,6 +89,8 @@ static final function bool ModifyUnitState(XComGameState NewGameState,
     local X2Effect_PersistentStatChange PStatEffect;
     local X2Effect_Persistent PEffect;
 
+    kLog("ModifyUnitState:", true, default.bPathLog);
+
     PTE_ForceRemoveEffects = Generate_PTE_ForceRemoveEffects();
 
     foreach UnitState.AffectedByEffectNames(EffectName)
@@ -92,7 +98,7 @@ static final function bool ModifyUnitState(XComGameState NewGameState,
         if (PTE_ForceRemoveEffects.Find(EffectName) == INDEX_NONE)  //(EffectName != 'SteadyHandsStatBoost')
         {
             kLog("Not interested in effect with name: '" $ EffectName $ "'",
-                true, default.bDeepLog);
+                true, default.bSubLog);
             continue;
         }
         EffectState = UnitState.GetUnitAffectedByEffectState(EffectName);
@@ -101,7 +107,7 @@ static final function bool ModifyUnitState(XComGameState NewGameState,
         {
             kRed("ERROR: Something Went Wrong!", false);
             kLog("Warning: Redscreen: ERROR: Something Went Wrong!",
-                true, default.bDeepLog);
+                true, default.bSubLog);
             continue;
         }
 
@@ -110,7 +116,7 @@ static final function bool ModifyUnitState(XComGameState NewGameState,
             $ "\n    FullTurnsTicked:                   " @ EffectState.FullTurnsTicked
             $ "\n    StatChanges.Length:                " @ EffectState.StatChanges.Length
             $ "\n    ObjectID:                          " @ EffectState.ObjectID,
-            true, default.bDeepLog);
+            true, default.bSubLog);
 
         PStatEffect = X2Effect_PersistentStatChange(PEffect);
 
@@ -123,7 +129,7 @@ static final function bool ModifyUnitState(XComGameState NewGameState,
             $ "\n    WatchRule:                         " @ PStatEffect.WatchRule
             $ "\n    FriendlyName:                      " @ PStatEffect.FriendlyName
             $ "\n    FriendlyDescription:               " @ PStatEffect.FriendlyDescription,
-            true, default.bDeepLog);
+            true, default.bSubLog);
 
         // Universal Features
         switch (TriggeredEventID)
@@ -133,7 +139,7 @@ static final function bool ModifyUnitState(XComGameState NewGameState,
             case 'UnitGroupTurnBegun':
                 if (EffectName == 'HunkerDown')
                 {
-                    kLog("UnitGroupTurnBegun: Removing Effect:" @ EffectName, true, default.bDeepLog);
+                    kLog("UnitGroupTurnBegun: Removing Effect:" @ EffectName, true, default.bSubLog);
                     EffectState = XComGameState_Effect(NewGameState
                         .ModifyStateObject(EffectState.Class, EffectState.ObjectID));
             
@@ -146,7 +152,7 @@ static final function bool ModifyUnitState(XComGameState NewGameState,
             case 'UnitGroupTurnEnded':
                 if (EffectName == 'SteadyHandsStatBoost')
                 {
-                    kLog("UnitGroupTurnEnded: Removing Effect:" @ EffectName, true, default.bDeepLog);
+                    kLog("UnitGroupTurnEnded: Removing Effect:" @ EffectName, true, default.bSubLog);
                     EffectState = XComGameState_Effect(NewGameState
                         .ModifyStateObject(EffectState.Class, EffectState.ObjectID));
             
@@ -214,5 +220,7 @@ private static function kRed(string Msg, bool bBypassRed=true)
 
 defaultproperties
 {
-    bDeepLog=true
+    bDeepLog=false
+    bPathLog=true
+    bSubLog=false
 }
