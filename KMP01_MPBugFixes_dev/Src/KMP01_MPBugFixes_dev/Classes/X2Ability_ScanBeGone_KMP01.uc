@@ -12,7 +12,22 @@
 
 class X2Ability_ScanBeGone_KMP01 extends X2Ability;
 
-var const name UV_ForceLadderBlock;
+var localized string strScanBeGoneFriendlyName;
+var localized string strScanBeGoneDescription;
+
+//---------------------------------------------------------------------------//
+
+var const name uvForceLadderBlock;  // UnitValue name to override ladder block
+
+var const name AbilityName;
+var const name AbilitySource;
+var const EAbilityHostility eHostility;
+var const EAbilityIconBehavior eHudIconBehavior;
+var const string imgTemplateIcon;
+
+var const bool bPurePassive;
+var const bool bDisplayInUI;
+var const bool bCrossClassEligible;
 
 //---------------------------------------------------------------------------//
 
@@ -29,21 +44,53 @@ static function array<X2DataTemplate> CreateTemplates()
 
 static function X2AbilityTemplate AddScanBeGoneAbility()
 {
+    local X2Effect_ScanBeGone_KMP01 PersistentEffect;
     local X2AbilityTemplate Template;
 
-    Template = PersistentPurePassive('ScanBeGone_Ability_KMP01', , ,
-        'eAbilitySource_Perk', false);
+    //Template = PersistentPurePassive('ScanBeGone_Ability_KMP01', , ,
+    //    'eAbilitySource_Perk', false);
+
+    `CREATE_X2ABILITY_TEMPLATE(Template, default.AbilityName);
+
+    Template.AbilitySourceName = default.AbilitySource;
+    Template.Hostility = default.eHostility;
+    Template.eAbilityIconBehaviorHUD = default.eHudIconBehavior;
+    Template.IconImage = default.imgTemplateIcon;
+
+    Template.bIsPassive = default.bPurePassive;
+    Template.bCrossClassEligible = default.bCrossClassEligible;
+
+    Template.LocFriendlyName = default.strScanBeGoneFriendlyName;
+    Template.LocLongDescription = default.strScanBeGoneDescription;
+
+    Template.AbilityToHitCalc = default.DeadEye;
+    Template.AbilityTargetStyle = default.SelfTarget;
+    Template.AbilityTriggers.AddItem(default.UnitPostBeginPlayTrigger);
+
+    // Build the Persistent Effect
+    PersistentEffect = new class'X2Effect_ScanBeGone_KMP01';
+    PersistentEffect.BuildPersistentEffect(1, true, false);
+    PersistentEffect.SetDisplayInfo(ePerkBuff_Passive,
+                                    Template.LocFriendlyName,
+                                    Template.LocLongDescription,
+                                    default.imgTemplateIcon,
+                                    default.bDisplayInUI, ,
+                                    Template.AbilitySourceName);
+
+    Template.AddTargetEffect(PersistentEffect);
+
+    Template.BuildNewGameStateFn = TypicalAbility_BuildGameState;
 
     return Template;
 }
 
 //---------------------------------------------------------------------------//
-
+/*
 static function X2AbilityTemplate PersistentPurePassive(name TemplateName,
     string TemplateIconImage="img:///UILibrary_PerkIcons.UIPerk_standard",
-    optional bool bCrossClassEligible=false,
-    optional Name AbilitySourceName='eAbilitySource_Perk',
-    optional bool bDisplayInUI=true)
+    bool bCrossClassEligible=false,
+    name AbilitySourceName='eAbilitySource_Perk',
+    bool bDisplayInUI=false)
 {
     local X2AbilityTemplate Template;
     local X2Effect_ScanBeGone_KMP01 Effect;
@@ -71,10 +118,20 @@ static function X2AbilityTemplate PersistentPurePassive(name TemplateName,
 
     return Template;
 }
-
+*/
 //---------------------------------------------------------------------------//
 
 defaultproperties
 {
-    UV_ForceLadderBlock="KMP01_ShouldBlockLadderWhileConcealed_UnitValue"
+    uvForceLadderBlock="KMP01_ShouldBlockLadderWhileConcealed_UnitValue"
+
+    AbilityName="ScanBeGone_Ability_KMP01"
+    AbilitySource="eAbilitySource_Perk"
+    eHostility=eHostility_Neutral
+    eHudIconBehavior=eAbilityIconBehavior_NeverShow
+    imgTemplateIcon="img:///UILibrary_PerkIcons.UIPerk_lowvisibility"
+
+    bPurePassive=true
+    bDisplayInUI=true
+    bCrossClassEligible=false
 }

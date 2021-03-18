@@ -15,6 +15,8 @@ class X2Effect_ScanBeGone_KMP01 extends X2Effect_Persistent;
 var localized string strMovementBlockedByTileBump;
 
 var bool bDeepLog;
+var bool bPathLog;
+var bool bSubLog;
 
 var private const float fValueInterrupt;
 var private const string imgTileBump;
@@ -25,6 +27,8 @@ function RegisterForEvents(XComGameState_Effect EffectGameState)
 {
     local XComGameState_Unit EffectUnit;
     local Object EffectObject;
+
+    kLog("RegisterForEvents:", true, default.bPathLog);
 
     EffectObject = EffectGameState;
     
@@ -76,6 +80,8 @@ static function EventListenerReturn TileBumpListener_Interrupt_KMP01(
     local TTile TargetLoc;
     local UnitValue UVal;
 
+    kLog("TileBumpListener_Interrupt_KMP01:", true, default.bPathLog);
+
     History = `XCOMHISTORY;
     UnitState = XComGameState_Unit(EventSource);
 
@@ -83,13 +89,14 @@ static function EventListenerReturn TileBumpListener_Interrupt_KMP01(
 
     if (AbilityContext.InterruptionStatus != eInterruptionStatus_Interrupt)
     {
-        kLog("Exit: Not in the Interrupt Phase", true, default.bDeepLog);
+        kLog("Exit: Not in the Interrupt Phase",
+            true, default.bSubLog);
         return ELR_NoInterrupt;
     }
     if (AbilityContext.InputContext.MovementPaths.Length < 1)
     {
         kLog("Exit: Not a movement skill (No Movement Paths)",
-            true, default.bDeepLog);
+            true, default.bSubLog);
         return ELR_NoInterrupt;
     }
 
@@ -104,7 +111,8 @@ static function EventListenerReturn TileBumpListener_Interrupt_KMP01(
 
     if (TileActors.Length == 0)
     {
-        kLog("Exit: No Units on Target Tile", true, default.bDeepLog);
+        kLog("Exit: No Units on Target Tile",
+            true, default.bSubLog);
         return ELR_NoInterrupt;
     }
 
@@ -135,7 +143,7 @@ static function EventListenerReturn TileBumpListener_Interrupt_KMP01(
         $ "\n    Player:  " @ BlockPlayer.ObjectID
                             @ BlockPlayer.PlayerName
                             @ BlockPlayer.TeamFlag,
-        true, default.bDeepLog);
+        true, default.bSubLog);
 
     NewGameState = class'XComGameStateContext_ChangeContainer'.static
         .CreateChangeState("TileBumpListener_Interrupt_KMP01");
@@ -146,7 +154,7 @@ static function EventListenerReturn TileBumpListener_Interrupt_KMP01(
         .default.ImmobilizedValueName, UVal))
     {
         kLog("Immobilize Already Added: Reapply with fValue=1",
-            true, default.bDeepLog);
+            true, default.bSubLog);
         UnitState.SetUnitFloatValue(class'X2Ability_DefaultAbilitySet'
             .default.ImmobilizedValueName, 1, UVal.eCleanup);
     }
@@ -154,7 +162,7 @@ static function EventListenerReturn TileBumpListener_Interrupt_KMP01(
     {
         kLog("Set UnitValue to Immobilize with custom fValue"
             @ UnitState.GetName(eNameType_FullNick),
-            true, default.bDeepLog);
+            true, default.bSubLog);
         UnitState.SetUnitFloatValue(class'X2Ability_DefaultAbilitySet'
             .default.ImmobilizedValueName, default.fValueInterrupt);
     }
@@ -166,7 +174,7 @@ static function EventListenerReturn TileBumpListener_Interrupt_KMP01(
             .PreBuildVisualizationFn.Length
         $ "\n    PostVisBuild:" @ AbilityContext
             .PostBuildVisualizationFn.Length,
-        true, default.bDeepLog);
+        true, default.bSubLog);
 
     //AbilityContext.PreBuildVisualizationFn.Length = 0;
     //AbilityContext.PostBuildVisualizationFn.Length = 0;
@@ -178,13 +186,13 @@ static function EventListenerReturn TileBumpListener_Interrupt_KMP01(
     {
         kLog("Adding NewGameState with" @ NewGameState.GetNumGameStateObjects()
             @ "modified State Objects to TacRules",
-            true, default.bDeepLog);
+            true, default.bSubLog);
         `TACTICALRULES.SubmitGameState(NewGameState);
     }
     else
     {
         kLog("Cleaning up Pending Game State",
-            true, default.bDeepLog);
+            true, default.bSubLog);
         History.CleanupPendingGameState(NewGameState);
     }
     return ELR_NoInterrupt;
@@ -203,17 +211,18 @@ static function EventListenerReturn TileBumpListener_Cleanup_KMP01(
     local XComGameState_Unit UnitState;
     local TTile StartLocation;
 
-    kLog("AbilityActivated Event for Visualization:", true, default.bDeepLog);
+    kLog("TileBumpListener_Cleanup_KMP01:", true, default.bPathLog);
     
     AbilityContext = XComGameStateContext_Ability(EventGameState.GetContext());
     UnitState = XComGameState_Unit(EventSource);
     
     if (AbilityContext.PreBuildVisualizationFn
-        .Find(TileBump_PreBuildVisualization) == INDEX_NONE)
+        .Find(class'X2Effect_ScanBeGone_KMP01'.static
+        .TileBump_PreBuildVisualization) == INDEX_NONE)
     {
         kLog("Exit: No PreBuildVisFn Found for Unit"
             @ UnitState.GetName(eNameType_FullNick),
-            true, default.bDeepLog);
+            true, default.bSubLog);
         return ELR_NoInterrupt;
     }
 
@@ -225,7 +234,7 @@ static function EventListenerReturn TileBumpListener_Cleanup_KMP01(
 
     kLog("Move Unit Back to Start Location: x:" @ StartLocation.X
         @ "y:" @ StartLocation.Y @ "z:" @ StartLocation.Z,
-        true, default.bDeepLog);
+        true, default.bSubLog);
 
     // Correct Unit Location
     `CHEATMGR.TeleportUnit(XGUnit(UnitState.GetVisualizer()),
@@ -247,6 +256,8 @@ static function TileBump_PreBuildVisualization(
     local X2Action_PlaySoundAndFlyOver SoundAction;
 	local XComGameStateHistory History;
 	local int UnitID;
+
+    kLog("TileBump_PreBuildVisualization:", true, default.bPathLog);
 
 	AbilityContext = XComGameStateContext_Ability(
         VisualizeGameState.GetContext());
@@ -285,30 +296,33 @@ static private function TileBumpCleanup(XComGameState_Unit UnitState)
     local XComGameState NewGameState;
     local UnitValue UVal;
     
+    kLog("TileBumpCleanup:", true, default.bPathLog);
+
     if (!UnitState.GetUnitValue(class'X2Ability_DefaultAbilitySet'
         .default.ImmobilizedValueName, UVal))
     {
         kLog("Exit: No Immobilize UnitValue Found for Unit"
             @ UnitState.GetName(eNameType_FullNick),
-            true, default.bDeepLog);
+            true, default.bSubLog);
         return;
     }
     else if (UVal.fValue != default.fValueInterrupt)
     {
         kLog("Exit: Immobilize was set by other effect"
             @ UnitState.GetName(eNameType_FullNick),
-            true, default.bDeepLog);
+            true, default.bSubLog);
         return;
     }
 
-    kLog("Begin Casting Black Magic:", true, default.bDeepLog);
+    kLog("Begin Casting Black Magic:",
+        true, default.bSubLog);
     NewGameState = class'XComGameStateContext_ChangeContainer'.static
         .CreateChangeState("TileBumpCleanup");
     UnitState = XComGameState_Unit(NewGameState
         .ModifyStateObject(UnitState.Class, UnitState.ObjectID));
 
     kLog("Remove Immobilize UnitValue",
-        true, default.bDeepLog);
+        true, default.bSubLog);
     UnitState.ClearUnitValue(class'X2Ability_DefaultAbilitySet'
         .default.ImmobilizedValueName);
     
@@ -316,16 +330,17 @@ static private function TileBumpCleanup(XComGameState_Unit UnitState)
     {
         kLog("Adding NewGameState with" @ NewGameState.GetNumGameStateObjects()
             @ "modified State Objects to TacRules through use of Black Magic",
-            true, default.bDeepLog);
+            true, default.bSubLog);
         `TACTICALRULES.SubmitGameState(NewGameState);
     }
     else
     {
         kLog("Cleaning up Pending Game State",
-            true, default.bDeepLog);
+            true, default.bSubLog);
         `XCOMHISTORY.CleanupPendingGameState(NewGameState);
     }
-    kLog("Seal the Black Magic back within the void", true, default.bDeepLog);
+    kLog("Seal the Black Magic back within the void",
+        true, default.bSubLog);
 }
 
 //---------------------------------------------------------------------------//
@@ -367,6 +382,8 @@ private function bool IsAtopLadder(XGUnit Unit)
     local TTile UnitTile;
     local Vector lTop;
 
+    kLog("IsAtopLadder:", true, default.bDeepLog);
+
     WorldInfo = `XWORLDINFO; //class'WorldInfo'.static.GetWorldInfo();
     World = `XWORLD;
 
@@ -385,7 +402,7 @@ private function bool IsAtopLadder(XGUnit Unit)
             $ "\n    Ladder Top Tile:" @ LadderTopTile.X
                                        @ LadderTopTile.Y
                                        @ LadderTopTile.Z,
-            true, default.bDeepLog);
+            true, default.bSubLog);
         if (UnitTile.X == LadderTopTile.X
             && UnitTile.Y == LadderTopTile.Y
             && UnitTile.Z > (LadderTopTile.Z - 2))
@@ -409,13 +426,15 @@ private function bool ShouldBlockLadder(XComGameState_Unit UnitState)
         return true;
     }
     
+    kLog("ShouldBlockLadder:", true, default.bDeepLog);
+
     bConcealed = UnitState.IsConcealed() || UnitState.IsSuperConcealed();
 
     if (bConcealed && UnitState.GetUnitValue(
-        class'X2Ability_ScanBeGone_KMP01'.default.UV_ForceLadderBlock, UVal))
+        class'X2Ability_ScanBeGone_KMP01'.default.uvForceLadderBlock, UVal))
     {
         kLog("Found LadderBlock Unit Value for Concealed Unit",
-            true, default.bDeepLog);
+            true, default.bSubLog);
         bForceBlock = bool(UVal.fValue);
     }
     
@@ -449,6 +468,8 @@ private static function kRed(string Msg, bool bBypassRed=true)
 defaultproperties
 {
     bDeepLog=true
+    bPathLog=true
+    bSubLog=false
 
     EffectRank=1 // This rank is set for blocking
     EffectName="ScanBeGone_Effect_KMP01"

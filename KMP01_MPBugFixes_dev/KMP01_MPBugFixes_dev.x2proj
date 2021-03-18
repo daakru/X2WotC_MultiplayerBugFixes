@@ -13,6 +13,8 @@ tags=War of the Chosen, UI, Gameplay, Multiplayer, MP, bugfix, why firaxis why, 
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="Config\" />
+    <Folder Include="Config\Maps" />
+    <Folder Include="Content\Plots" />
     <Folder Include="Localization\" />
     <Folder Include="Content" />
     <Folder Include="Src\" />
@@ -32,7 +34,16 @@ tags=War of the Chosen, UI, Gameplay, Multiplayer, MP, bugfix, why firaxis why, 
     <Folder Include="Src\KMP01_TacticalVisualizationFix_dev" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Config\Maps\XComParcels.ini">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Config\Maps\XComPlots.ini">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="Content\KMP01_UILibrary_PerkIcons.upk">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Content\Plots\Plot_RFT_MP_01_dot.umap">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Localization\KMP01_CmdrAbilityBar_dev.int">
