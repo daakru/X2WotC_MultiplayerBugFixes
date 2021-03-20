@@ -390,7 +390,7 @@ private function bool ShouldShowWarningMsg()
 
 defaultproperties
 {
-    bLog=false
+    bLog=true
     ScreenClass=UIFinalShell
 
     uiVersionPanel="KMP01_VersionPanel"

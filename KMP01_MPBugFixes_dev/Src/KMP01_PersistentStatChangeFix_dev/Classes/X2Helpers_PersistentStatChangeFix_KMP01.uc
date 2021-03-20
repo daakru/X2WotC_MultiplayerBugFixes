@@ -16,14 +16,70 @@ var bool bDeepLog;
 var bool bPathLog;
 var bool bSubLog;
 
+enum EEffectClass_Type
+{
+    eEffectClass_None,
+    eEffectClass_Effect,
+    eEffectClass_Persistent,
+    eEffectClass_StatChange,
+    eEffectClass_Other
+};
+
+//---------------------------------------------------------------------------//
+
+private static function array<name> Generate_WatchEffects()
+{
+    local array<name> EffectList;
+
+    EffectList.AddItem('SteadyHandsStatBoost');
+    EffectList.AddItem('FrenzyEffect');
+    EffectList.AddItem('HunkerDown');
+    //EffectList.AddItem('');
+
+    return EffectList;
+}
+
+//---------------------------------------------------------------------------//
+
+private static function array<name> Generate_PTB_ForceRemoveEffects()
+{
+    local array<name> EffectList;
+
+    //EffectList.AddItem('');
+
+    return EffectList;
+}
+
 //---------------------------------------------------------------------------//
 
 private static function array<name> Generate_PTE_ForceRemoveEffects()
 {
     local array<name> EffectList;
 
-    EffectList.AddItem('SteadyHandsStatBoost');
+    //EffectList.AddItem('');
+
+    return EffectList;
+}
+
+//---------------------------------------------------------------------------//
+
+private static function array<name> Generate_UGB_ForceRemoveEffects()
+{
+    local array<name> EffectList;
+
     EffectList.AddItem('HunkerDown');
+    //EffectList.AddItem('');
+
+    return EffectList;
+}
+
+//---------------------------------------------------------------------------//
+
+private static function array<name> Generate_UGE_ForceRemoveEffects()
+{
+    local array<name> EffectList;
+
+    EffectList.AddItem('SteadyHandsStatBoost');
     //EffectList.AddItem('');
 
     return EffectList;
@@ -77,12 +133,73 @@ static final function bool HandlePlayerTurnEvent(XComGameState NewGameState,
 
 //---------------------------------------------------------------------------//
 
+static private function EEffectClass_Type LogEffectInfo(
+    name EffectName, const out XComGameState_Effect EffectState)
+{
+    local X2Effect_PersistentStatChange StatChangeEffect;
+    local X2Effect_Persistent Effect;
+    local EEffectClass_Type eType;
+
+    if (EffectState == none)
+    {
+        return eEffectClass_None;
+    }
+
+    Effect = EffectState.GetX2Effect();
+    if (Effect == none)
+    {
+        return eEffectClass_Effect;
+    }
+
+    eType = eEffectClass_Persistent;
+    
+    if (Effect.IsA('X2Effect_PersistentStatChange'))
+    {
+        StatChangeEffect = X2Effect_PersistentStatChange(Effect);
+        eType = eEffectClass_StatChange;
+    }
+
+    // Log EffectState Info
+    kLog("Logging EffectState of '" $ EffectName $ "':"
+        $ "\n    iTurnsRemaining:                   " @ EffectState.iTurnsRemaining
+        $ "\n    FullTurnsTicked:                   " @ EffectState.FullTurnsTicked
+        $ "\n    StatChanges.Length:                " @ EffectState.StatChanges.Length
+        $ "\n    ObjectID:                          " @ EffectState.ObjectID,
+        true, default.bSubLog);
+
+    // Log Persistent Effect Template Info
+    kLog("Logging Template of '" $ EffectName $ "':"
+        $ "\n    iNumTurns:                         " @ Effect.iNumTurns
+        $ "\n    bInfiniteDuration:                 " @ Effect.bInfiniteDuration
+        $ "\n    bIgnorePlayerCheckOnTick:          " @ Effect.bIgnorePlayerCheckOnTick
+        $ "\n    DuplicateResponse:                 " @ Effect.DuplicateResponse
+        $ "\n    ApplyOnTick.Length:                " @ Effect.ApplyOnTick.Length
+        $ "\n    WatchRule:                         " @ Effect.WatchRule
+        $ "\n    FriendlyName:                      " @ Effect.FriendlyName
+        $ "\n    FriendlyDescription:               " @ Effect.FriendlyDescription,
+        true, default.bSubLog);
+
+    if (eType == eEffectClass_StatChange)
+    {
+        // Log properties specific to PersistentStatChange Templates
+    }
+
+    return eType;
+}
+
+//---------------------------------------------------------------------------//
+
 static final function bool ModifyUnitState(XComGameState NewGameState,
                                            XComGameState_Unit UnitState,
                                            optional name TriggeredEventID)
 {
-    local array<name> PTE_ForceRemoveEffects;
+    local array<name> WatchEffects;
+    //local array<name> PTB_ForceRemoveEffects;
+    //local array<name> PTE_ForceRemoveEffects;
+    //local array<name> UGB_ForceRemoveEffects;
+    //local array<name> UGE_ForceRemoveEffects;
     local XComGameState_Effect EffectState;
+    local EEffectClass_Type eType;
     local name EffectName;
     local bool bModified;
 
@@ -91,45 +208,30 @@ static final function bool ModifyUnitState(XComGameState NewGameState,
 
     kLog("ModifyUnitState:", true, default.bPathLog);
 
-    PTE_ForceRemoveEffects = Generate_PTE_ForceRemoveEffects();
+    WatchEffects = Generate_WatchEffects();
+
+    //PTB_ForceRemoveEffects = Generate_PTB_ForceRemoveEffects();
+    //PTE_ForceRemoveEffects = Generate_PTE_ForceRemoveEffects();
+    //UGB_ForceRemoveEffects = Generate_UGB_ForceRemoveEffects();
+    //UGE_ForceRemoveEffects = Generate_UGE_ForceRemoveEffects();
 
     foreach UnitState.AffectedByEffectNames(EffectName)
     {
-        if (PTE_ForceRemoveEffects.Find(EffectName) == INDEX_NONE)  //(EffectName != 'SteadyHandsStatBoost')
+        if (WatchEffects.Find(EffectName) == INDEX_NONE)
         {
-            kLog("Not interested in effect with name: '" $ EffectName $ "'",
-                true, default.bSubLog);
+            //kLog("Not interested in effect with name: '" $ EffectName $ "'",
+            //    true, default.bSubLog);
             continue;
         }
+
         EffectState = UnitState.GetUnitAffectedByEffectState(EffectName);
-        PEffect = EffectState.GetX2Effect();
-        if (!PEffect.IsA('X2Effect_PersistentStatChange'))
+
+        eType = LogEffectInfo(EffectName, EffectState);
+
+        if (eType != eEffectClass_Persistent && eType != eEffectClass_StatChange)
         {
-            kRed("ERROR: Something Went Wrong!", false);
-            kLog("Warning: Redscreen: ERROR: Something Went Wrong!",
-                true, default.bSubLog);
             continue;
         }
-
-        kLog("Logging EffectState of '" $ EffectName $ "':"
-            $ "\n    iTurnsRemaining:                   " @ EffectState.iTurnsRemaining
-            $ "\n    FullTurnsTicked:                   " @ EffectState.FullTurnsTicked
-            $ "\n    StatChanges.Length:                " @ EffectState.StatChanges.Length
-            $ "\n    ObjectID:                          " @ EffectState.ObjectID,
-            true, default.bSubLog);
-
-        PStatEffect = X2Effect_PersistentStatChange(PEffect);
-
-        kLog("Logging Template of '" $ EffectName $ "':"
-            $ "\n    iNumTurns:                         " @ PStatEffect.iNumTurns
-            $ "\n    bInfiniteDuration:                 " @ PStatEffect.bInfiniteDuration
-            $ "\n    bIgnorePlayerCheckOnTick:          " @ PStatEffect.bIgnorePlayerCheckOnTick
-            $ "\n    DuplicateResponse:                 " @ PStatEffect.DuplicateResponse
-            $ "\n    ApplyOnTick.Length:                " @ PStatEffect.ApplyOnTick.Length
-            $ "\n    WatchRule:                         " @ PStatEffect.WatchRule
-            $ "\n    FriendlyName:                      " @ PStatEffect.FriendlyName
-            $ "\n    FriendlyDescription:               " @ PStatEffect.FriendlyDescription,
-            true, default.bSubLog);
 
         // Universal Features
         switch (TriggeredEventID)

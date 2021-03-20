@@ -218,6 +218,12 @@ static protected function EventListenerReturn OnPlayerTurnEvent_KMP01(
         @ PlayerState.PlayerName @ PlayerState.TeamFlag,
         true, default.bPathLog);
 
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+
+    // Return because we aren't using this function for anything but logging
+    return ELR_NoInterrupt;
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
+
     NewGameState = class'XComGameStateContext_ChangeContainer'.static
         .CreateChangeState("OnPlayerTurnEvent_KMP01");
 

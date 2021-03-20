@@ -27,3 +27,34 @@ static final function bool IsUnitValid(XComGameState_Unit UnitState,
         || (!bIsDeadValid && !UnitState.IsAlive())
     );
 }
+
+//---------------------------------------------------------------------------//
+
+static final function string TTileToString(out TTile Tile)
+{
+    return "x:" @ Tile.X @ "y:" @ Tile.Y @ "z:" @ Tile.Z;
+}
+
+//---------------------------------------------------------------------------//
+
+static final function string VectorToString(out Vector vLoc)
+{
+    return "x:" @ vLoc.X @ "y:" @ vLoc.Y @ "z:" @ vLoc.Z;
+}
+
+//---------------------------------------------------------------------------//
+
+static final function string GetCursorLoc(optional out Vector vLoc,
+                                          optional out TTile Tile)
+{
+    local XComWorldData WorldData;
+
+    WorldData = `XWORLD;
+    vLoc = `CURSOR.Location;
+    if(!WorldData.GetFloorTileForPosition(vLoc, Tile))
+    {
+        Tile = WorldData.GetTileCoordinatesFromPosition(vLoc);
+    }
+    return "Cursor:" @ VectorToString(vLoc) 
+        @ "\n  Tile:" @ TTileToString(Tile);
+}

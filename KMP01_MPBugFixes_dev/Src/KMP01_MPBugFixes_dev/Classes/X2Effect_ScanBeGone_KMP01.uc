@@ -45,6 +45,7 @@ function RegisterForEvents(XComGameState_Effect EffectGameState)
         EffectUnit, ,
         EffectUnit
     );
+    /*
     `XEVENTMGR.RegisterForEvent(
         EffectObject,
         'AbilityActivated',
@@ -53,6 +54,7 @@ function RegisterForEvents(XComGameState_Effect EffectGameState)
         EffectUnit, ,
         EffectUnit
     );
+    */
     super.RegisterForEvents(EffectGameState);
 }
 
@@ -80,12 +82,24 @@ static function EventListenerReturn TileBumpListener_Interrupt_KMP01(
     local TTile TargetLoc;
     local UnitValue UVal;
 
+    local XGUnit UnitPawn;
+    local Vector vLoc;
+
     kLog("TileBumpListener_Interrupt_KMP01:", true, default.bPathLog);
 
     History = `XCOMHISTORY;
     UnitState = XComGameState_Unit(EventSource);
 
     AbilityContext = XComGameStateContext_Ability(EventGameState.GetContext());
+
+    if (AbilityContext.PreBuildVisualizationFn.Find(
+        class'X2Effect_ScanBeGone_KMP01'.static
+        .TileBump_PreBuildVisualization) != INDEX_NONE)
+    {
+        kLog("Exit: This AbilityContext has already been handled",
+            true, default.bSubLog);
+        return ELR_NoInterrupt;
+    }
 
     if (AbilityContext.InterruptionStatus != eInterruptionStatus_Interrupt)
     {
@@ -118,7 +132,7 @@ static function EventListenerReturn TileBumpListener_Interrupt_KMP01(
 
     Blocker = XComGameState_Unit(History
         .GetGameStateForObjectID(XGUnit(TileActors[0]).ObjectID));
-    if (Blocker != none)
+    if (Blocker == none)
     {
         kRed("ERROR: No Blocking Unit Found in History!", false);
         kLog("Warning: Redscreen:"
@@ -145,18 +159,28 @@ static function EventListenerReturn TileBumpListener_Interrupt_KMP01(
                             @ BlockPlayer.TeamFlag,
         true, default.bSubLog);
 
+    UnitPawn = XGUnit(XComGameState_Unit(History
+        .GetGameStateForObjectID(UnitState.ObjectID)).GetVisualizer());
+
+    vLoc = UnitPawn.Location;
+    kLog("vLoc:" @ string(vLoc), true, default.bSubLog);
+
     NewGameState = class'XComGameStateContext_ChangeContainer'.static
         .CreateChangeState("TileBumpListener_Interrupt_KMP01");
     UnitState = XComGameState_Unit(NewGameState
         .ModifyStateObject(UnitState.Class, UnitState.ObjectID));
+        
+    UnitState.SetUnitFloatValue('uvStartVectorX', vLoc.X, eCleanup_BeginTurn);
+    UnitState.SetUnitFloatValue('uvStartVectorY', vLoc.Y, eCleanup_BeginTurn);
+    UnitState.SetUnitFloatValue('uvStartVectorZ', vLoc.Z, eCleanup_BeginTurn);
 
     if (UnitState.GetUnitValue(class'X2Ability_DefaultAbilitySet'
         .default.ImmobilizedValueName, UVal))
     {
-        kLog("Immobilize Already Added: Reapply with fValue=1",
+        kLog("Immobilize Already Added:",
             true, default.bSubLog);
-        UnitState.SetUnitFloatValue(class'X2Ability_DefaultAbilitySet'
-            .default.ImmobilizedValueName, 1, UVal.eCleanup);
+        //UnitState.SetUnitFloatValue(class'X2Ability_DefaultAbilitySet'
+        //    .default.ImmobilizedValueName, 1, UVal.eCleanup);
     }
     else
     {
@@ -178,9 +202,14 @@ static function EventListenerReturn TileBumpListener_Interrupt_KMP01(
 
     //AbilityContext.PreBuildVisualizationFn.Length = 0;
     //AbilityContext.PostBuildVisualizationFn.Length = 0;
-    AbilityContext.PreBuildVisualizationFn
-        .AddItem(class'X2Effect_ScanBeGone_KMP01'
-        .static.TileBump_PreBuildVisualization);
+    if (AbilityContext.PreBuildVisualizationFn.Find(
+        class'X2Effect_ScanBeGone_KMP01'.static
+        .TileBump_PreBuildVisualization) == INDEX_NONE)
+    {
+        AbilityContext.PreBuildVisualizationFn
+            .AddItem(class'X2Effect_ScanBeGone_KMP01'
+            .static.TileBump_PreBuildVisualization);
+    }
 
     if (NewGameState.GetNumGameStateObjects() > 0)
     {
@@ -210,12 +239,36 @@ static function EventListenerReturn TileBumpListener_Cleanup_KMP01(
     local XComGameStateContext_Ability AbilityContext;
     local XComGameState_Unit UnitState;
     local TTile StartLocation;
+    local UnitValue UVal;
+    local Vector vStartLoc;
+    local Vector vPathLoc;
+    local TTile tStartLoc;
 
     kLog("TileBumpListener_Cleanup_KMP01:", true, default.bPathLog);
     
     AbilityContext = XComGameStateContext_Ability(EventGameState.GetContext());
     UnitState = XComGameState_Unit(EventSource);
-    
+
+    // Attempt with alternate BuildVisualizationFn
+    if (class'X2ModConfig_KMP01'.default.Unstable)
+    {
+        /*
+        UnitState = XComGameState_Unit(EventGameState
+            .GetGameStateForObjectID(UnitState.ObjectID));
+        if (UnitState == none)
+        {
+            UnitState = XComGameState_Unit(EventGameState
+                .ModifyStateObject(class'XComGameState_Unit',
+                XComGameState_Unit(EventSource).ObjectID));
+        }
+        kLog("Remove Immobilize UnitValue",
+            true, default.bSubLog);
+        UnitState.ClearUnitValue(class'X2Ability_DefaultAbilitySet'
+            .default.ImmobilizedValueName);
+        */
+        return ELR_NoInterrupt;
+    }
+
     if (AbilityContext.PreBuildVisualizationFn
         .Find(class'X2Effect_ScanBeGone_KMP01'.static
         .TileBump_PreBuildVisualization) == INDEX_NONE)
@@ -224,6 +277,18 @@ static function EventListenerReturn TileBumpListener_Cleanup_KMP01(
             @ UnitState.GetName(eNameType_FullNick),
             true, default.bSubLog);
         return ELR_NoInterrupt;
+    }
+    if (UnitState.GetUnitValue('uvStartVectorX', UVal))
+    {
+        vStartLoc.X = UVal.fValue;
+        if (UnitState.GetUnitValue('uvStartVectorY', UVal))
+        {
+            vStartLoc.Y = UVal.fValue;
+            if (UnitState.GetUnitValue('uvStartVectorZ', UVal))
+            {
+                vStartLoc.Z = UVal.fValue;
+            }
+        }
     }
 
     StartLocation = AbilityContext.InputContext
@@ -236,10 +301,32 @@ static function EventListenerReturn TileBumpListener_Cleanup_KMP01(
         @ "y:" @ StartLocation.Y @ "z:" @ StartLocation.Z,
         true, default.bSubLog);
 
-    // Correct Unit Location
-    `CHEATMGR.TeleportUnit(XGUnit(UnitState.GetVisualizer()),
-        `XWORLD.GetPositionFromTileCoordinates(StartLocation));
+    vPathLoc = `XWORLD.GetPositionFromTileCoordinates(StartLocation);
+    tStartLoc = `XWORLD.GetTileCoordinatesFromPosition(vStartLoc);
 
+    kLog("Verify Location:\n    Vector:" @ string(vStartLoc)
+        @ "\n    Tile:" @ string(vPathLoc) 
+        @ "\n    Vector Tile:" @ tStartLoc.X @ tStartLoc.Y @ tStartLoc.Z,
+        true, default.bSubLog);
+
+    // Set Z to match the tile value
+    vStartLoc.Z = vPathLoc.Z;
+    tStartLoc = `XWORLD.GetTileCoordinatesFromPosition(vStartLoc);
+
+
+    // Correct Unit Location
+    if (tStartLoc != StartLocation)
+    {
+        kLog("Tile mismatch!" @ tStartLoc.X @ tStartLoc.Y @ tStartLoc.Z,
+            true, default.bSubLog);
+        `CHEATMGR.TeleportUnit(XGUnit(UnitState.GetVisualizer()), vPathLoc);
+    }
+    else
+    {
+        kLog("Tile and Vector match!", true, default.bSubLog);
+        `CHEATMGR.TeleportUnit(XGUnit(UnitState.GetVisualizer()), vStartLoc);
+    }
+    
     return ELR_NoInterrupt;
 }
 
@@ -281,8 +368,7 @@ static function TileBump_PreBuildVisualization(
         default.strMovementBlockedByTileBump, '', eColor_Bad,
         default.imgTileBump, /*Look*/, /*Block*/, /*VisTeam*/, /*Behavior*/);
     
-
-    TileBumpCleanup(XComGameState_Unit(
+    TileBumpCleanup(XComGameState_Unit(//AbilityContext.InputContext.SourceObject));
         History.GetGameStateForObjectID(UnitID)));
 }
 
@@ -382,7 +468,7 @@ private function bool IsAtopLadder(XGUnit Unit)
     local TTile UnitTile;
     local Vector lTop;
 
-    kLog("IsAtopLadder:", true, default.bDeepLog);
+    //kLog("IsAtopLadder:", true, default.bPathLog);
 
     WorldInfo = `XWORLDINFO; //class'WorldInfo'.static.GetWorldInfo();
     World = `XWORLD;
@@ -393,20 +479,21 @@ private function bool IsAtopLadder(XGUnit Unit)
         lTop = Ladder.GetTop();
         LadderTopTile = World.GetTileCoordinatesFromPosition(lTop);
         UnitTile = World.GetTileCoordinatesFromPosition(Unit.Location);
-        kLog("Unit Location:  " @ Unit.Location.X
-                                @ Unit.Location.Y
-                                @ Unit.Location.Z
-            $ "\n    Unit Tile:      " @ UnitTile.X
-                                       @ UnitTile.Y
-                                       @ UnitTile.Z
-            $ "\n    Ladder Top Tile:" @ LadderTopTile.X
-                                       @ LadderTopTile.Y
-                                       @ LadderTopTile.Z,
-            true, default.bSubLog);
         if (UnitTile.X == LadderTopTile.X
             && UnitTile.Y == LadderTopTile.Y
             && UnitTile.Z > (LadderTopTile.Z - 2))
         {
+            // Only log this if the unit is in reasonable proximity
+            kLog("Unit Location:  " @ Unit.Location.X
+                                    @ Unit.Location.Y
+                                    @ Unit.Location.Z
+                $ "\n    Unit Tile:      " @ UnitTile.X
+                                           @ UnitTile.Y
+                                           @ UnitTile.Z
+                $ "\n    Ladder Top Tile:" @ LadderTopTile.X
+                                           @ LadderTopTile.Y
+                                           @ LadderTopTile.Z,
+                true, default.bSubLog);
             return UnitTile.Z < (LadderTopTile.Z + 3);
         }
     }
@@ -468,7 +555,7 @@ private static function kRed(string Msg, bool bBypassRed=true)
 defaultproperties
 {
     bDeepLog=true
-    bPathLog=true
+    bPathLog=false
     bSubLog=false
 
     EffectRank=1 // This rank is set for blocking
