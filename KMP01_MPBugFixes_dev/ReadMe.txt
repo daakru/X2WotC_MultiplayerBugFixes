@@ -1,6 +1,6 @@
 ﻿[WotC] MP Bug-Spray: Multiplayer Overhaul (WIP)
 Mod Author: Kinetos#6935
-Version: 1.3.4.1
+Version: 1.4.0
 
 Developmental gameplay fixes for XCOM 2 WotC Multiplayer.
 Code is available on GitHub here: https://github.com/daakru/X2WotC_MultiplayerBugFixes.
@@ -21,17 +21,17 @@ Any direct gameplay changes will be documented here on addition or removal:
     Steady Hands now functions as it does in Single Player.
     Hunkered Down from Deep Cover now functions as it does in Single Player.
     Camera should no longer pan to enemy concealed units at match start.
+    Non-visible units no longer prevent targeting a tile for movement unless they are at the top of a ladder.
 
 Developmental Features (Set Unstable=true in XComGame.ini):
-    Prevent units that are not visible from being tilescanned.
-    Cancels the movement on attempting to move to a location with a non-visible enemy unit.
-    Does not prevent tilescanning when a unit is blocking the top of a ladder.
+    Test changing character costs and abilities.
 
 =-= Credits and Thanks =-=
 
 Thanks to those who help test new features before release:
     Action Man
     Ted
+    D'Haren Legion
 
 Thanks to the regulars of the XCOM 2 Modding discord for all their help.
 Thanks to Iridar and robojumper for all their advice in fixing tilescanning.

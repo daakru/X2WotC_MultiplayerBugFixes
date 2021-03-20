@@ -1,11 +1,12 @@
 /*                                                                             
  * FILE:     XComDownloadableContentInfo_KMP01_MPBugFixes_dev.uc
  * AUTHOR:   Kinetos#6935, https://steamcommunity.com/id/kinetos/
- * VERSION:  KMP01 v1.3.4.1
+ * VERSION:  KMP01 v1.4.0
  *
  * Specify Mod behavior on campaign creation or initial saved game load.
  *
- * Dependencies: X2ModConfig_KMP01.uc; X2Helpers_Logger_KMP01.uc
+ * Dependencies: X2ModConfig_KMP01.uc; X2Helpers_Logger_KMP01.uc;
+ *               X2Ability_ScanBeGone_KMP01.uc
  *
  * Copyright (c) 2016 Firaxis Games, Inc. All rights reserved.
  */
@@ -97,6 +98,9 @@ static private function ModifyMPCharacterTemplates()
     local array<MPTemplateChanges> MPTemplateChangeData;
     local MPTemplateChanges ChangeData;
     local name PerkName;
+
+    MPTemplateMgr = class'X2MPCharacterTemplateManager'
+        .static.GetMPCharacterTemplateManager();
 
     GetModifyMPTemplateData(MPTemplateChangeData);
 

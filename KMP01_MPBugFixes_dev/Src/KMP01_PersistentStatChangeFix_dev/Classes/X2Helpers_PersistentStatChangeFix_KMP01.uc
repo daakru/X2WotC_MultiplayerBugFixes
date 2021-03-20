@@ -27,62 +27,42 @@ enum EEffectClass_Type
 
 //---------------------------------------------------------------------------//
 
-private static function array<name> Generate_WatchEffects()
+private static function Generate_WatchEffects(out array<name> List)
 {
-    local array<name> EffectList;
-
-    EffectList.AddItem('SteadyHandsStatBoost');
-    EffectList.AddItem('FrenzyEffect');
-    EffectList.AddItem('HunkerDown');
-    //EffectList.AddItem('');
-
-    return EffectList;
+    List.AddItem('SteadyHandsStatBoost');
+    List.AddItem('FrenzyEffect');
+    List.AddItem('HunkerDown');
+    //List.AddItem('');
 }
 
 //---------------------------------------------------------------------------//
 
-private static function array<name> Generate_PTB_ForceRemoveEffects()
+private static function Generate_PTB_ForceRemoveEffects(out array<name> List)
 {
-    local array<name> EffectList;
-
-    //EffectList.AddItem('');
-
-    return EffectList;
+    //List.AddItem('');
 }
 
 //---------------------------------------------------------------------------//
 
-private static function array<name> Generate_PTE_ForceRemoveEffects()
+private static function Generate_PTE_ForceRemoveEffects(out array<name> List)
 {
-    local array<name> EffectList;
-
-    //EffectList.AddItem('');
-
-    return EffectList;
+    //List.AddItem('');
 }
 
 //---------------------------------------------------------------------------//
 
-private static function array<name> Generate_UGB_ForceRemoveEffects()
+private static function Generate_UGB_ForceRemoveEffects(out array<name> List)
 {
-    local array<name> EffectList;
-
-    EffectList.AddItem('HunkerDown');
-    //EffectList.AddItem('');
-
-    return EffectList;
+    List.AddItem('HunkerDown');
+    //List.AddItem('');
 }
 
 //---------------------------------------------------------------------------//
 
-private static function array<name> Generate_UGE_ForceRemoveEffects()
+private static function Generate_UGE_ForceRemoveEffects(out array<name> List)
 {
-    local array<name> EffectList;
-
-    EffectList.AddItem('SteadyHandsStatBoost');
-    //EffectList.AddItem('');
-
-    return EffectList;
+    List.AddItem('SteadyHandsStatBoost');
+    //List.AddItem('');
 }
 
 //---------------------------------------------------------------------------//
@@ -203,17 +183,14 @@ static final function bool ModifyUnitState(XComGameState NewGameState,
     local name EffectName;
     local bool bModified;
 
-    local X2Effect_PersistentStatChange PStatEffect;
-    local X2Effect_Persistent PEffect;
-
     kLog("ModifyUnitState:", true, default.bPathLog);
 
-    WatchEffects = Generate_WatchEffects();
+    Generate_WatchEffects(WatchEffects);
 
-    //PTB_ForceRemoveEffects = Generate_PTB_ForceRemoveEffects();
-    //PTE_ForceRemoveEffects = Generate_PTE_ForceRemoveEffects();
-    //UGB_ForceRemoveEffects = Generate_UGB_ForceRemoveEffects();
-    //UGE_ForceRemoveEffects = Generate_UGE_ForceRemoveEffects();
+    //Generate_PTB_ForceRemoveEffects(PTB_ForceRemoveEffects);
+    //Generate_PTE_ForceRemoveEffects(PTE_ForceRemoveEffects);
+    //Generate_UGB_ForceRemoveEffects(UGB_ForceRemoveEffects);
+    //Generate_UGE_ForceRemoveEffects(UGE_ForceRemoveEffects);
 
     foreach UnitState.AffectedByEffectNames(EffectName)
     {

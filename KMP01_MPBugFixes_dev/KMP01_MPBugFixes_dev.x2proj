@@ -24,6 +24,7 @@ tags=War of the Chosen, UI, Gameplay, Multiplayer, MP, bugfix, why firaxis why, 
     <Folder Include="Src\KMP01_MPBugFixes_dev\" />
     <Folder Include="Src\KMP01_MPBugFixes_dev\Classes\" />
     <Folder Include="Src\KMP01_TacticalVisualizationFix_dev\Classes" />
+    <Folder Include="Src\KMP01_TileScanFix_dev\Classes" />
     <Folder Include="Src\KMP01_UIMPShell_dev\Classes" />
     <Folder Include="Src\KMP01_PersistentStatChangeFix_dev\Classes" />
     <Folder Include="Src\KMP01_Utilities_dev\" />
@@ -32,6 +33,7 @@ tags=War of the Chosen, UI, Gameplay, Multiplayer, MP, bugfix, why firaxis why, 
     <Folder Include="Src\KMP01_PersistentStatChangeFix_dev" />
     <Folder Include="Src\KMP01_UIMPShell_dev" />
     <Folder Include="Src\KMP01_TacticalVisualizationFix_dev" />
+    <Folder Include="Src\KMP01_TileScanFix_dev" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Config\Maps\XComParcels.ini">
@@ -59,6 +61,9 @@ tags=War of the Chosen, UI, Gameplay, Multiplayer, MP, bugfix, why firaxis why, 
       <SubType>Content</SubType>
     </Content>
     <Content Include="Localization\KMP01_TacticalVisualizationFix_dev.int">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\KMP01_TileScanFix_dev.int">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Localization\KMP01_UIMPShell_dev.int">
@@ -90,17 +95,17 @@ tags=War of the Chosen, UI, Gameplay, Multiplayer, MP, bugfix, why firaxis why, 
     <Content Include="Src\KMP01_MPBugFixes_dev\Classes\UIScreenListener_UIFinalShell_KMP01.uc">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Src\KMP01_MPBugFixes_dev\Classes\X2Ability_ScanBeGone_KMP01.uc">
-      <SubType>Content</SubType>
-    </Content>
     <Content Include="Src\KMP01_MPBugFixes_dev\Classes\X2DownloadableContentInfo_KMP01_MPBugFixes_dev.uc" />
-    <Content Include="Src\KMP01_MPBugFixes_dev\Classes\X2Effect_ScanBeGone_KMP01.uc">
-      <SubType>Content</SubType>
-    </Content>
     <Content Include="Src\KMP01_PersistentStatChangeFix_dev\Classes\X2Helpers_PersistentStatChangeFix_KMP01.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\KMP01_TacticalVisualizationFix_dev\Classes\XComGameState_Unit_KMP01.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\KMP01_TileScanFix_dev\Classes\X2Ability_ScanBeGone_KMP01.uc">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Src\KMP01_TileScanFix_dev\Classes\X2Effect_ScanBeGone_KMP01.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\KMP01_UIMPShell_dev\Classes\UIMPShell_SquadCostPanel_RemotePlayer_KMP01.uc">

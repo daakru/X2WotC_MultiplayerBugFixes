@@ -1,0 +1,6 @@
+[X2Ability_ScanBeGone_KMP01]
+strScanBeGoneFriendlyName = "Tilescan Protection"
+strScanBeGoneDescription = "Prevents units from being tilescanned without actually choosing to move to their location."
+
+[X2Effect_ScanBeGone_KMP01]
+strMovementBlockedByTileBump = "Target Tile is Blocked!"
